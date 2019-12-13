@@ -45,7 +45,6 @@ describe('AuthService', () => {
   });
 
   it('should be defined', () => {
-    // expect(service).toBeDefined();
-    expect(1).toBeDefined();
+    expect(service).toBeDefined();
   });
 });
