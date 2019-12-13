@@ -2,6 +2,7 @@
 /dist
 /node_modules
 graphql.classes.ts
+src/graphql.classes.ts
 
 # Logs
 logs

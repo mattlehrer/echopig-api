@@ -30,5 +30,5 @@ module.exports = {
       },
     },
   ],
-  ignorePatterns: ['build/', 'dist/', 'graphql.classes.ts'],
+  ignorePatterns: ['build/', 'dist/', 'coverage', 'graphql.classes.ts'],
 };
