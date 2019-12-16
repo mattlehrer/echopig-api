@@ -12,6 +12,13 @@ function validateURL(url) {
 
 interface PostDocument extends Post, Document {
   // Declaring everything that is not in the GraphQL Schema for a Post
+  guid: string;
+  email: {
+    fromAddress: string;
+    subject: string;
+    bodyHTML: string;
+    bodyPlainText: string;
+  };
 }
 
 const PostSchema: Schema = new Schema(
