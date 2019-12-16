@@ -1,4 +1,4 @@
-import { Schema, Document } from 'mongoose';
+import { Schema, Document, model } from 'mongoose';
 import { Post } from '../../../graphql.classes';
 import { isURL } from 'validator';
 import * as autopopulate from 'mongoose-autopopulate';
@@ -45,4 +45,6 @@ const PostSchema: Schema = new Schema(
 
 PostSchema.plugin(autopopulate);
 
-export { PostDocument, PostSchema };
+const PostModel = model<PostDocument>('Post', PostSchema);
+
+export { PostDocument, PostSchema, PostModel };
