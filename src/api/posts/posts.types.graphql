@@ -1,0 +1,35 @@
+scalar Date
+scalar ObjectId
+
+type Query {
+  posts(byUser: ObjectId): [Post!]!
+  post(post: ObjectId): Post!
+}
+
+type Mutation {
+  createPost(createPostInput: CreatePostInput): Post!
+  updatePost(fieldsToUpdate: UpdatePostInput!, post: String): Post!
+}
+
+type Post {
+  byUser: String!
+  shareURL: String!
+  comment: String
+  episode: String
+  createdAt: Date
+  updatedAt: Date
+  enabled: Boolean!
+  _id: ObjectId!
+}
+
+input CreatePostInput {
+  shareURL: String!
+  comment: String
+  byUser: ObjectId
+  enabled: Boolean
+}
+
+input UpdatePostInput {
+  comment: String
+  enabled: Boolean
+}

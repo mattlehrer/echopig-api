@@ -38,6 +38,7 @@
     "graphql": "^14.5.8",
     "joi": "^14.3.1",
     "mongoose": "^5.8.0",
+    "mongoose-autopopulate": "^0.9.1",
     "nodemailer": "^6.4.2",
     "passport": "^0.4.1",
     "passport-facebook": "^3.0.0",
@@ -46,7 +47,8 @@
     "passport-twitter": "^1.0.4",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.0",
-    "rxjs": "^6.5.3"
+    "rxjs": "^6.5.3",
+    "validator": "^12.1.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^6.9.0",

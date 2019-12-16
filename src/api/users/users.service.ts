@@ -2,7 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { UserDocument, UserModel } from './schemas/user.schema';
-import { CreateUserInput, UpdateUserInput } from '../../graphql.classes';
+import {
+  CreateUserInput,
+  UpdateUserInput,
+  ObjectId,
+} from '../../graphql.classes';
 import { randomBytes } from 'crypto';
 import { createTransport, SendMailOptions } from 'nodemailer';
 import { ConfigService } from '../../config/config.service';
@@ -261,6 +265,12 @@ export class UsersService {
     const user = await this.userModel
       .findOne({ lowercaseUsername: username.toLowerCase() })
       .exec();
+    if (user) return user;
+    return undefined;
+  }
+
+  async findOneById(userId: ObjectId): Promise<UserDocument | undefined> {
+    const user = await this.userModel.findById(userId).exec();
     if (user) return user;
     return undefined;
   }

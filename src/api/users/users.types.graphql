@@ -22,6 +22,7 @@ type User {
   createdAt: Date!
   updatedAt: Date!
   lastSeenAt: Date!
+  posts: [ObjectId!]!
   enabled: Boolean!
   _id: ObjectId!
 }

@@ -4,6 +4,13 @@
  */
 
 /* tslint:disable */
+export class CreatePostInput {
+  shareURL: string;
+  comment?: string;
+  byUser?: ObjectId;
+  enabled?: boolean;
+}
+
 export class CreateUserInput {
   username: string;
   email: string;
@@ -21,6 +28,11 @@ export class UpdatePasswordInput {
   newPassword: string;
 }
 
+export class UpdatePostInput {
+  comment?: string;
+  enabled?: boolean;
+}
+
 export class UpdateUserInput {
   username?: string;
   email?: string;
@@ -34,6 +46,13 @@ export class LoginResult {
 }
 
 export abstract class IMutation {
+  abstract createPost(createPostInput?: CreatePostInput): Post | Promise<Post>;
+
+  abstract updatePost(
+    fieldsToUpdate: UpdatePostInput,
+    post?: string,
+  ): Post | Promise<Post>;
+
   abstract createUser(createUserInput?: CreateUserInput): User | Promise<User>;
 
   abstract updateUser(
@@ -52,10 +71,25 @@ export abstract class IMutation {
   ): User | Promise<User>;
 }
 
+export class Post {
+  byUser: string;
+  shareURL: string;
+  comment?: string;
+  episode?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+  enabled: boolean;
+  _id: ObjectId;
+}
+
 export abstract class IQuery {
   abstract login(user: LoginUserInput): LoginResult | Promise<LoginResult>;
 
   abstract refreshToken(): string | Promise<string>;
+
+  abstract posts(byUser?: ObjectId): Post[] | Promise<Post[]>;
+
+  abstract post(post?: ObjectId): Post | Promise<Post>;
 
   abstract users(): User[] | Promise<User[]>;
 
@@ -71,6 +105,7 @@ export class User {
   createdAt: Date;
   updatedAt: Date;
   lastSeenAt: Date;
+  posts: ObjectId[];
   enabled: boolean;
   _id: ObjectId;
 }

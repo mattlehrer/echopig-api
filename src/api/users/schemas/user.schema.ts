@@ -1,6 +1,6 @@
 import { Schema, model, Model, Document, Query } from 'mongoose';
 import * as bcrypt from 'bcrypt';
-import { User } from '../../../graphql.classes';
+import { User, ObjectId } from '../../../graphql.classes';
 
 export interface UserDocument extends User, Document {
   // Declaring everything that is not in the GraphQL Schema for a User
@@ -11,6 +11,7 @@ export interface UserDocument extends User, Document {
     token: string;
     expiration: Date;
   };
+  posts: [ObjectId];
 
   /**
    * Checks if the user's password provided matches the user's password hash
@@ -81,6 +82,13 @@ export const UserSchema: Schema = new Schema(
       type: Date,
       default: Date.now,
     },
+    posts: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'Post',
+        default: [],
+      },
+    ],
   },
   {
     timestamps: true,
