@@ -1,6 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
+import { normalizeEmail } from 'validator';
+import { generate } from 'shortid';
 import { UserDocument, UserModel } from './schemas/user.schema';
 import {
   CreateUserInput,
@@ -126,7 +128,7 @@ export class UsersService {
     let user: UserDocument | null = null;
 
     user = await this.userModel.findOneAndUpdate(
-      { lowercaseUsername: username.toLowerCase() },
+      { normalizedUsername: username.toLowerCase() },
       fields,
       { new: true, runValidators: true },
     );
@@ -228,7 +230,11 @@ export class UsersService {
    * @memberof UsersService
    */
   async create(createUserInput: CreateUserInput): Promise<UserDocument> {
-    const createdUser = new this.userModel(createUserInput);
+    const createdUser = new this.userModel({
+      postTag: generate(),
+      saveForLaterId: generate(),
+      ...createUserInput,
+    });
 
     let user: UserDocument | undefined;
     try {
@@ -248,7 +254,7 @@ export class UsersService {
    */
   async findOneByEmail(email: string): Promise<UserDocument | undefined> {
     const user = await this.userModel
-      .findOne({ lowercaseEmail: email.toLowerCase() })
+      .findOne({ normalizedEmail: normalizeEmail(email) })
       .exec();
     if (user) return user;
     return undefined;
@@ -263,7 +269,7 @@ export class UsersService {
    */
   async findOneByUsername(username: string): Promise<UserDocument | undefined> {
     const user = await this.userModel
-      .findOne({ lowercaseUsername: username.toLowerCase() })
+      .findOne({ normalizedUsername: username.toLowerCase() })
       .exec();
     if (user) return user;
     return undefined;
@@ -314,7 +320,7 @@ export class UsersService {
       if (
         error.message
           .toLowerCase()
-          .includes(createUserInput.email.toLowerCase())
+          .includes(normalizeEmail(createUserInput.email) as string)
       ) {
         throw new Error(
           `e-mail ${createUserInput.email} is already registered`,

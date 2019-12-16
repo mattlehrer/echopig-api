@@ -1,12 +1,13 @@
 import { Schema, model, Model, Document, Query } from 'mongoose';
+import { normalizeEmail } from 'validator';
 import * as bcrypt from 'bcrypt';
 import { User, ObjectId } from '../../../graphql.classes';
 
 export interface UserDocument extends User, Document {
   // Declaring everything that is not in the GraphQL Schema for a User
   password: string;
-  lowercaseUsername: string;
-  lowercaseEmail: string;
+  normalizedUsername: string;
+  normalizedEmail: string;
   passwordReset?: {
     token: string;
     expiration: Date;
@@ -65,14 +66,17 @@ export const UserSchema: Schema = new Schema(
       type: [String],
       required: true,
     },
-    lowercaseUsername: {
+    normalizedUsername: {
       type: String,
       unique: true,
     },
-    lowercaseEmail: {
+    normalizedEmail: {
       type: String,
       unique: true,
     },
+    isVerified: { type: Boolean, default: false },
+    // passwordResetToken: String,
+    // passwordResetExpires: Date,
     passwordReset: PasswordResetSchema,
     enabled: {
       type: Boolean,
@@ -89,6 +93,23 @@ export const UserSchema: Schema = new Schema(
         default: [],
       },
     ],
+
+    name: String,
+    postTag: { type: String, unique: true },
+    saveForLaterId: { type: String, unique: true },
+    avatar: String,
+    // saves: [
+    //   {
+    //     type: Schema.Types.ObjectId,
+    //     ref: 'Save',
+    //     default: [],
+    //   },
+    // ],
+    explicit: { type: Boolean, default: false },
+
+    facebook: String,
+    twitter: String,
+    tokens: Array,
   },
   {
     timestamps: true,
@@ -100,8 +121,8 @@ UserSchema.pre<UserDocument>('save', function(next) {
   // eslint-disable-next-line @typescript-eslint/no-this-alias
   const user = this;
 
-  user.lowercaseUsername = user.username.toLowerCase();
-  user.lowercaseEmail = user.email.toLowerCase();
+  user.normalizedUsername = user.username.toLowerCase();
+  user.normalizedEmail = normalizeEmail(user.email) as string;
 
   // Make sure not to rehash the password if it is already hashed
   if (!user.isModified('password')) {
@@ -130,14 +151,14 @@ UserSchema.pre<Query<UserDocument>>('findOneAndUpdate', function(next) {
   if (updateFields.username) {
     this.update(
       {},
-      { $set: { lowercaseUsername: updateFields.username.toLowerCase() } },
+      { $set: { normalizedUsername: updateFields.username.toLowerCase() } },
     );
   }
 
   if (updateFields.email) {
     this.update(
       {},
-      { $set: { lowercaseEmail: updateFields.email.toLowerCase() } },
+      { $set: { normalizedEmail: normalizeEmail(updateFields.email) } },
     );
   }
 

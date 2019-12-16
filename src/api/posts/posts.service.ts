@@ -51,7 +51,7 @@ export class PostsService {
     //   if (
     //     error.message
     //       .toLowerCase()
-    //       .includes(createPostInput.email.toLowerCase())
+    //       .includes(normalizeEmail(createPostInput.email))
     //   ) {
     //     throw new Error(
     //       `e-mail ${createPostInput.email} is already registered`,

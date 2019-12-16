@@ -100,8 +100,12 @@ export abstract class IQuery {
 
 export class User {
   username: string;
+  normalizedUsername?: string;
   email: string;
+  normalizedEmail?: string;
   permissions: string[];
+  postTag: string;
+  saveForLaterId: string;
   createdAt: Date;
   updatedAt: Date;
   lastSeenAt: Date;

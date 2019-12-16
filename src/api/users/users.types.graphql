@@ -17,8 +17,12 @@ type Mutation {
 
 type User {
   username: String!
+  normalizedUsername: String
   email: String!
+  normalizedEmail: String
   permissions: [String!]!
+  postTag: String!
+  saveForLaterId: String!
   createdAt: Date!
   updatedAt: Date!
   lastSeenAt: Date!
