@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { MongoError } from 'mongodb';
 import { Model } from 'mongoose';
 import { PostDocument } from './schemas/post.schema';
 import { UsersService } from '../users/users.service';
+import { EpisodesService } from '../episodes/episodes.service';
 import {
   CreatePostInput,
   // UpdatePostInput,
@@ -15,10 +16,17 @@ export class PostsService {
   constructor(
     @InjectModel('Post') private readonly postModel: Model<PostDocument>,
     private usersService: UsersService,
+    private episodesService: EpisodesService,
   ) {}
 
   async create(createPostInput: CreatePostInput): Promise<PostDocument> {
     const createdPost = new this.postModel(createPostInput);
+    const episode = await this.episodesService.findOrCreate(
+      createPostInput.shareURL,
+    );
+    createdPost.episode = episode._id;
+    // @TODO: check if this episode has already been posted by this user
+
     const userCreatingPost = await this.usersService.findOneById(
       createPostInput.byUser,
     );
@@ -28,6 +36,10 @@ export class PostsService {
       post = await createdPost.save();
       userCreatingPost.posts.push(post._id);
       await userCreatingPost.save();
+      episode.posts.push(post._id);
+      await episode.save();
+      Logger.log('Created new post:');
+      Logger.log(post);
     } catch (error) {
       throw this.evaluateMongoError(error);
       // throw this.evaluateMongoError(error, postData);

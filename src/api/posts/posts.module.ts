@@ -6,11 +6,14 @@ import { PostResolver } from './posts.resolvers';
 import { DateScalar } from '../scalars/date.scalar';
 import { ObjectIdScalar } from '../scalars/object-id.scalar';
 import { UsersModule } from '../users/users.module';
+import { EpisodesModule } from '../episodes/episodes.module';
+// import { ConfigModule } from 'src/config/config.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: 'Post', schema: PostSchema }]),
     UsersModule,
+    EpisodesModule,
     // ConfigModule,
   ],
   exports: [PostsService],

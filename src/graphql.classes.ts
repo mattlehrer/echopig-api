@@ -40,6 +40,20 @@ export class UpdateUserInput {
   enabled?: boolean;
 }
 
+export class Episode {
+  podcast?: ObjectId;
+  title?: string;
+  description?: string;
+  image?: string;
+  mp3URL: string;
+  releaseDate?: Date;
+  duration?: number;
+  shareURLs?: string[];
+  posts?: ObjectId[];
+  parentalRating?: string;
+  _id: ObjectId;
+}
+
 export class LoginResult {
   user: User;
   token: string;
@@ -71,6 +85,28 @@ export abstract class IMutation {
   ): User | Promise<User>;
 }
 
+export class Podcast {
+  iTunesID?: number;
+  author?: string;
+  title: string;
+  collectionViewUrl?: string;
+  feedUrl: string;
+  artworkUrl30?: string;
+  artworkUrl60?: string;
+  artworkUrl100?: string;
+  collectionExplicitness?: string;
+  trackExplicitness?: string;
+  country?: string;
+  primaryGenreName?: string;
+  contentAdvisoryRating?: string;
+  artworkUrl600?: string;
+  genreIds?: number[];
+  genres?: string[];
+  listenNotesID?: string;
+  appURLs?: string[];
+  _id: ObjectId;
+}
+
 export class Post {
   byUser: string;
   shareURL: string;
@@ -86,6 +122,14 @@ export abstract class IQuery {
   abstract login(user: LoginUserInput): LoginResult | Promise<LoginResult>;
 
   abstract refreshToken(): string | Promise<string>;
+
+  abstract episodes(podcast?: ObjectId): Episode[] | Promise<Episode[]>;
+
+  abstract episode(episodeId?: ObjectId): Episode | Promise<Episode>;
+
+  abstract podcast(podcastId?: ObjectId): Podcast | Promise<Podcast>;
+
+  abstract genre(genre?: string): Podcast[] | Promise<Podcast[]>;
 
   abstract posts(byUser?: ObjectId): Post[] | Promise<Post[]>;
 

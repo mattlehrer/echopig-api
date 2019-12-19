@@ -3,6 +3,8 @@ import { getModelToken } from '@nestjs/mongoose';
 import { PostsService } from './posts.service';
 import { PostModel } from './schemas/post.schema';
 import { UsersService } from '../users/users.service';
+// import { UserModel } from '../users/schemas/user.schema';
+// import { ConfigService } from 'src/config/config.service';
 
 jest.mock('../users/users.service');
 
@@ -18,6 +20,8 @@ describe('PostsService', () => {
           useValue: PostModel,
         },
         UsersService,
+        // { provide: getModelToken('User'), useValue: UserModel },
+        // ConfigService,
       ],
     }).compile();
 

@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { normalizeEmail } from 'validator';
-import { generate } from 'shortid';
+import { generate as generateId } from 'shortid';
 import { UserDocument, UserModel } from './schemas/user.schema';
 import {
   CreateUserInput,
@@ -231,14 +231,16 @@ export class UsersService {
    */
   async create(createUserInput: CreateUserInput): Promise<UserDocument> {
     const createdUser = new this.userModel({
-      postTag: generate(),
-      saveForLaterId: generate(),
+      postTag: generateId(),
+      saveForLaterId: generateId(),
       ...createUserInput,
     });
 
     let user: UserDocument | undefined;
     try {
       user = await createdUser.save();
+      Logger.log('Created new user:');
+      Logger.log(user);
     } catch (error) {
       throw this.evaluateMongoError(error, createUserInput);
     }
