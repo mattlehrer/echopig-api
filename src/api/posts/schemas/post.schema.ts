@@ -1,5 +1,5 @@
 import { Schema, Document, model } from 'mongoose';
-import { Post } from '../../../graphql.classes';
+import { Post, ObjectId } from '../../../graphql.classes';
 import { isURL } from 'validator';
 import * as autopopulate from 'mongoose-autopopulate';
 
@@ -12,6 +12,7 @@ function validateURL(url) {
 
 interface PostDocument extends Post, Document {
   // Declaring everything that is not in the GraphQL Schema for a Post
+  // byUser: ObjectId;
   guid: string;
   email: {
     fromAddress: string;
@@ -36,12 +37,12 @@ const PostSchema: Schema = new Schema(
       validate: { validator: validateURL },
     },
     comment: String,
-    // episode: {
-    //   type: Schema.Types.ObjectId,
-    //   ref: 'Episode',
-    //   autopopulate: true,
-    //   required: true,
-    // },
+    episode: {
+      type: Schema.Types.ObjectId,
+      ref: 'Episode',
+      autopopulate: true,
+      required: true,
+    },
     guid: String,
     enabled: { type: Boolean, required: true },
   },
