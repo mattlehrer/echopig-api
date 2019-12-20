@@ -60,12 +60,14 @@ export class LoginResult {
 }
 
 export abstract class IMutation {
-  abstract createPost(createPostInput?: CreatePostInput): Post | Promise<Post>;
+  abstract createPost(createPostInput: CreatePostInput): Post | Promise<Post>;
 
   abstract updatePost(
+    postId: ObjectId,
     fieldsToUpdate: UpdatePostInput,
-    post?: string,
   ): Post | Promise<Post>;
+
+  abstract deletePost(postId: ObjectId): ObjectId | Promise<ObjectId>;
 
   abstract createUser(createUserInput?: CreateUserInput): User | Promise<User>;
 
@@ -108,11 +110,11 @@ export class Podcast {
 }
 
 export class Post {
-  byUser: string;
+  byUser: ObjectId;
   shareURL: string;
   comment?: string;
-  episode?: string;
-  createdAt?: Date;
+  episode: ObjectId;
+  createdAt: Date;
   updatedAt?: Date;
   enabled: boolean;
   _id: ObjectId;
@@ -131,9 +133,9 @@ export abstract class IQuery {
 
   abstract genre(genre?: string): Podcast[] | Promise<Podcast[]>;
 
-  abstract posts(byUser?: ObjectId): Post[] | Promise<Post[]>;
+  abstract posts(byUser: ObjectId): Post[] | Promise<Post[]>;
 
-  abstract post(post?: ObjectId): Post | Promise<Post>;
+  abstract post(post: ObjectId): Post | Promise<Post>;
 
   abstract users(): User[] | Promise<User[]>;
 
