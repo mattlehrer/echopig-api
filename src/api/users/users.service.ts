@@ -77,6 +77,15 @@ export class UsersService {
     return user;
   }
 
+  async removePostByUser(
+    postId: ObjectId,
+    userId: ObjectId,
+  ): Promise<UserDocument> {
+    return await this.userModel.updateOne(userId, {
+      $pull: { posts: postId },
+    });
+  }
+
   /**
    * Updates a user in the database. If any value is invalid, it will still update the other
    * fields of the user.
@@ -279,6 +288,17 @@ export class UsersService {
 
   async findOneById(userId: ObjectId): Promise<UserDocument | undefined> {
     const user = await this.userModel.findById(userId).exec();
+    if (user) return user;
+    return undefined;
+  }
+
+  async findOneByIdAndPopulatePosts(
+    userId: ObjectId,
+  ): Promise<UserDocument | undefined> {
+    const user = await this.userModel
+      .findById(userId)
+      .populate({ path: 'posts', options: { sort: { updatedAt: -1 } } })
+      .exec();
     if (user) return user;
     return undefined;
   }

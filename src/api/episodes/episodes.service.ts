@@ -55,6 +55,13 @@ export class EpisodesService {
     return await this.episodeModel.findById(episodeId);
   }
 
+  async removePostOfEpisode(postId: ObjectId): Promise<EpisodeDocument> {
+    return await this.episodeModel.updateOne(
+      { posts: postId },
+      { $pull: { posts: postId } },
+    );
+  }
+
   private evaluateMongoError(
     error: MongoError,
     // createPostInput: CreatePostInput,

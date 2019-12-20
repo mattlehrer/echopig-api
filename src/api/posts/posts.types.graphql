@@ -2,21 +2,22 @@ scalar Date
 scalar ObjectId
 
 type Query {
-  posts(byUser: ObjectId): [Post!]!
-  post(post: ObjectId): Post!
+  posts(byUser: ObjectId!): [Post!]!
+  post(post: ObjectId!): Post!
 }
 
 type Mutation {
-  createPost(createPostInput: CreatePostInput): Post!
-  updatePost(fieldsToUpdate: UpdatePostInput!, post: String): Post!
+  createPost(createPostInput: CreatePostInput!): Post!
+  updatePost(postId: ObjectId!, fieldsToUpdate: UpdatePostInput!): Post!
+  deletePost(postId: ObjectId!): ObjectId!
 }
 
 type Post {
-  byUser: String!
+  byUser: ObjectId!
   shareURL: String!
   comment: String
-  episode: String
-  createdAt: Date
+  episode: ObjectId!
+  createdAt: Date!
   updatedAt: Date
   enabled: Boolean!
   _id: ObjectId!

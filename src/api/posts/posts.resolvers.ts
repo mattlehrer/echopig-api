@@ -4,10 +4,10 @@ import { UserInputError, ValidationError } from 'apollo-server-core';
 import { PostsService } from './posts.service';
 import {
   CreatePostInput,
+  UpdatePostInput,
   Post,
-  // UpdatePostInput,
-  ObjectId,
   User,
+  ObjectId,
 } from '../../graphql.classes';
 import { PostDocument } from './schemas/post.schema';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -46,28 +46,39 @@ export class PostResolver {
     return createdPost;
   }
 
-  /*
   @Mutation('updatePost')
-  // @AdminAllowedArgs(
-  //   'username',
-  //   'fieldsToUpdate.username',
-  //   'fieldsToUpdate.email',
-  //   'fieldsToUpdate.enabled',
-  // )
-  @UseGuards(JwtAuthGuard, UsernameEmailAdminGuard)
-  async updateUser(
+  @UseGuards(JwtAuthGuard)
+  async updatePost(
     @Args('postId') postId: string,
     @Args('fieldsToUpdate') fieldsToUpdate: UpdatePostInput,
-    @Context('req') request: any,
+    @CurrentUser() user: User,
   ): Promise<Post> {
     let post: PostDocument | undefined;
     try {
-      post = await this.postsService.update(postId, fieldsToUpdate);
+      post = await this.postsService.update(
+        { _id: postId, byUser: user },
+        fieldsToUpdate,
+      );
     } catch (error) {
       throw new ValidationError(error.message);
     }
     if (!post) throw new UserInputError('The post does not exist');
     return post;
   }
-  */
+
+  @Mutation('deletePost')
+  @UseGuards(JwtAuthGuard)
+  async deletePost(
+    @Args('postId') postId: string,
+    @CurrentUser() user: User,
+  ): Promise<Post> {
+    let post: ObjectId | undefined;
+    try {
+      post = await this.postsService.delete({ _id: postId, byUser: user });
+    } catch (error) {
+      throw new ValidationError(error.message);
+    }
+    if (!post) throw new UserInputError('The post does not exist');
+    return post;
+  }
 }
