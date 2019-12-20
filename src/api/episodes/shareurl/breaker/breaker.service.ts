@@ -48,13 +48,13 @@ export class BreakerService {
       moment.utc(pubDate, 'ddd MMM D, YYYY at h:mm a').valueOf(),
     );
 
-    const duration = $(
-      '.row.text-center.text-md-left .col-12 > div > div > span',
-    )
-      .next()
-      .text();
-    Logger.debug(duration);
-    Logger.debug(`sliced: ${duration.slice(3)}`);
+    // const duration = $(
+    //   '.row.text-center.text-md-left .col-12 > div > div > span',
+    // )
+    //   .next()
+    //   .text()
+    //   .slice(3);
+    // Logger.debug(`${duration}`);
     // @TODO: parse human friendly duration format
 
     const episodeData = {
@@ -65,7 +65,7 @@ export class BreakerService {
       )[1],
       description: $('meta[name="og:description"]').attr('content'),
       releaseDate,
-      // duration: Number(data.match(/(?:duration: )(\d*)/)[1]),
+      // duration,
     };
 
     Logger.log(`BreakerService parsed ${url}:`);
