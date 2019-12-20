@@ -16,9 +16,11 @@ export class OvercastService {
 
     const $ = cheerio.load(data);
     const podcastInit: PodcastInit = {
-      itunesId: $('h3 a')
-        .attr('href')
-        .match(/\d+/)[0],
+      itunesId: Number(
+        $('h3 a')
+          .attr('href')
+          .match(/\d+/)[0],
+      ),
       appURL: `https://overcast.fm${$('h3 a').attr('href')}`,
     };
 
