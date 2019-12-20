@@ -16,9 +16,11 @@ export class PocketcastsService {
 
     const $ = cheerio.load(data);
     const podcastInit: PodcastInit = {
-      itunesId: $('a', '.itunes_button')
-        .attr('href')
-        .match(/(?:id)(\d+)/)[1],
+      itunesId: Number(
+        $('a', '.itunes_button')
+          .attr('href')
+          .match(/(?:id)(\d+)/)[1],
+      ),
       appURL: $('a', '#artwork').attr('href'),
     };
 
@@ -28,6 +30,7 @@ export class PocketcastsService {
       title: $('h1').text(),
       description: $('meta[property="og:description"]').attr('content'),
       releaseDate: new Date($('#episode_date').text()),
+      duration: $('#duration_time').data('duration'),
     };
 
     Logger.log(`PocketcastsService parsed ${url}:`);
