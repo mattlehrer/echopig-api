@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { MongoError } from 'mongodb';
-import { Model, Query } from 'mongoose';
+import { Model } from 'mongoose';
 import * as uuid from 'uuid/v4';
 import { PostDocument } from './schemas/post.schema';
 import { UsersService } from '../users/users.service';
