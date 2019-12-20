@@ -1,7 +1,7 @@
 import { Schema, model, Model, Document, Query } from 'mongoose';
 import { normalizeEmail } from 'validator';
 import * as bcrypt from 'bcrypt';
-import { User, ObjectId } from '../../../graphql.classes';
+import { User, Post } from '../../../graphql.classes';
 
 export interface UserDocument extends User, Document {
   // Declaring everything that is not in the GraphQL Schema for a User
@@ -12,7 +12,7 @@ export interface UserDocument extends User, Document {
     token: string;
     expiration: Date;
   };
-  posts: [ObjectId];
+  posts: Post[];
 
   /**
    * Checks if the user's password provided matches the user's password hash
