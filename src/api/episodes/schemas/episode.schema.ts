@@ -1,12 +1,13 @@
 import { Schema, Document, model } from 'mongoose';
 import * as autopopulate from 'mongoose-autopopulate';
 import { generate as generateId } from 'shortid';
-import { Episode } from '../../../graphql.classes';
+import { Episode, ObjectId } from '../../../graphql.classes';
 
 interface EpisodeDocument extends Episode, Document {
   // Declaring everything that is not in the GraphQL Schema for a Post
   // field: string;
-  mp3RedirectChain: string[];
+  podcast: ObjectId;
+  posts: ObjectId[];
 }
 
 const EpisodeSchema: Schema = new Schema(
