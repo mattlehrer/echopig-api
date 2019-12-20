@@ -114,6 +114,7 @@ export class UsersService {
       if (duplicateUser || !emailValid) fieldsToUpdate.email = undefined;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const fields: any = {};
 
     if (fieldsToUpdate.password) {
@@ -185,7 +186,8 @@ export class UsersService {
     };
 
     return new Promise(resolve => {
-      transporter.sendMail(mailOptions, (err, info) => {
+      transporter.sendMail(mailOptions, (err: Error, info) => {
+        Logger.debug(info);
         if (err) {
           resolve(false);
           return;

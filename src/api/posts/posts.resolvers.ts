@@ -1,4 +1,4 @@
-import { UseGuards, Logger } from '@nestjs/common';
+import { UseGuards } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { UserInputError, ValidationError } from 'apollo-server-core';
 import { PostsService } from './posts.service';

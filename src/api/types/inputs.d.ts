@@ -1,4 +1,6 @@
+import { Request } from 'express';
 import { ObjectId } from '../../graphql.classes';
+import { UserDocument } from '../users/schemas/user.schema';
 
 export type EpisodeInputData = {
   podcast?: ObjectId;
@@ -13,3 +15,7 @@ export type EpisodeInputData = {
   parentalRating?: string;
   mp3RedirectChain?: string[];
 };
+
+export interface RequestWithUser extends Request {
+  user: UserDocument | ObjectId;
+}

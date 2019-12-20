@@ -1,4 +1,4 @@
-import { UseGuards } from '@nestjs/common';
+import { UseGuards, Logger } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver, Context } from '@nestjs/graphql';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -8,6 +8,7 @@ import { AdminGuard } from '../auth/guards/admin.guard';
 import { UserInputError, ValidationError } from 'apollo-server-core';
 import { UserDocument } from './schemas/user.schema';
 import { AdminAllowedArgs } from '../decorators/admin-allowed-args';
+import { RequestWithUser } from '../types/inputs';
 
 @Resolver('User')
 export class UserResolver {
@@ -43,6 +44,7 @@ export class UserResolver {
   @Query('forgotPassword')
   async forgotPassword(@Args('email') email: string): Promise<void> {
     const worked = await this.usersService.forgotPassword(email);
+    Logger.debug(worked);
   }
 
   // What went wrong is intentionally not sent (wrong username or code or user not in reset status)
@@ -85,7 +87,7 @@ export class UserResolver {
   async updateUser(
     @Args('username') username: string,
     @Args('fieldsToUpdate') fieldsToUpdate: UpdateUserInput,
-    @Context('req') request: any,
+    @Context('req') request: RequestWithUser,
   ): Promise<User> {
     let user: UserDocument | undefined;
     if (!username && request.user) username = request.user.username;

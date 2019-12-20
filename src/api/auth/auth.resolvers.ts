@@ -5,6 +5,7 @@ import { AuthenticationError } from 'apollo-server-core';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { UseGuards } from '@nestjs/common';
 import { UserDocument } from '../users/schemas/user.schema';
+import { RequestWithUser } from '../types/inputs';
 
 @Resolver('Auth')
 export class AuthResolver {
@@ -22,7 +23,9 @@ export class AuthResolver {
   // There is no username guard here because if the person has the token, they can be any user
   @Query('refreshToken')
   @UseGuards(JwtAuthGuard)
-  async refreshToken(@Context('req') request: any): Promise<string> {
+  async refreshToken(
+    @Context('req') request: RequestWithUser,
+  ): Promise<string> {
     const user: UserDocument = request.user;
     if (!user)
       throw new AuthenticationError(

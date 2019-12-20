@@ -1,5 +1,5 @@
 import { Schema, Document, model } from 'mongoose';
-import { Post, ObjectId } from '../../../graphql.classes';
+import { Post } from '../../../graphql.classes';
 import { isURL } from 'validator';
 import * as autopopulate from 'mongoose-autopopulate';
 

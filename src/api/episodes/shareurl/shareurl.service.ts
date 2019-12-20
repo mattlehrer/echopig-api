@@ -6,6 +6,7 @@ import { BreakerService } from './breaker/breaker.service';
 import { StitcherService } from './stitcher/stitcher.service';
 import { EpisodeInputData } from 'src/api/types/inputs';
 import { PodcastsService } from 'src/api/podcasts/podcasts.service';
+import { PodcastDocument } from 'src/api/podcasts/schemas/podcast.schema';
 
 @Injectable()
 export class ShareurlService {
@@ -37,7 +38,7 @@ export class ShareurlService {
     }
 
     const { episodeData, podcastInit } = await handler(url);
-    let podcast;
+    let podcast: PodcastDocument | undefined;
     if (podcastInit.itunesId) {
       podcast = await this.podcastsService.findOrCreateByItunesId(
         podcastInit.itunesId,

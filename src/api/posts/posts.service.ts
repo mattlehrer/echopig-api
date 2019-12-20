@@ -58,6 +58,7 @@ export class PostsService {
     fieldsToUpdate: UpdatePostInput,
   ): Promise<PostDocument> {
     // Remove undefined keys for update
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const fields: any = {};
     for (const key in fieldsToUpdate) {
       if (typeof fieldsToUpdate[key] !== 'undefined' && key !== 'password') {
