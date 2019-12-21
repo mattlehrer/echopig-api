@@ -1,7 +1,7 @@
 import { Schema, model, Model, Document, Query } from 'mongoose';
 import { normalizeEmail } from 'validator';
 import * as bcrypt from 'bcrypt';
-import { User, Post } from '../../../graphql.classes';
+import { User } from '../../../graphql.classes';
 
 export interface UserDocument extends User, Document {
   // Declaring everything that is not in the GraphQL Schema for a User
@@ -12,7 +12,6 @@ export interface UserDocument extends User, Document {
     token: string;
     expiration: Date;
   };
-  posts: Post[];
 
   /**
    * Checks if the user's password provided matches the user's password hash
@@ -75,8 +74,6 @@ export const UserSchema: Schema = new Schema(
       unique: true,
     },
     isVerified: { type: Boolean, default: false },
-    // passwordResetToken: String,
-    // passwordResetExpires: Date,
     passwordReset: PasswordResetSchema,
     enabled: {
       type: Boolean,
@@ -86,13 +83,6 @@ export const UserSchema: Schema = new Schema(
       type: Date,
       default: Date.now,
     },
-    posts: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'Post',
-        default: [],
-      },
-    ],
 
     name: String,
     postTag: { type: String, unique: true },

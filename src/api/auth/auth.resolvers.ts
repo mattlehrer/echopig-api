@@ -5,7 +5,7 @@ import { AuthenticationError } from 'apollo-server-core';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { UseGuards } from '@nestjs/common';
 import { UserDocument } from '../users/schemas/user.schema';
-import { RequestWithUser } from '../types/inputs';
+import { RequestWithUser } from '../@types/declarations';
 
 @Resolver('Auth')
 export class AuthResolver {

@@ -49,7 +49,6 @@ export class Episode {
   releaseDate?: Date;
   duration?: number;
   shareURLs?: string[];
-  posts?: ObjectId[];
   parentalRating?: string;
   _id: ObjectId;
 }
@@ -139,7 +138,11 @@ export abstract class IQuery {
 
   abstract users(): User[] | Promise<User[]>;
 
-  abstract user(username?: string, email?: string): User | Promise<User>;
+  abstract user(
+    username?: string,
+    email?: string,
+    userId?: ObjectId,
+  ): User | Promise<User>;
 
   abstract forgotPassword(email?: string): boolean | Promise<boolean>;
 }
@@ -155,7 +158,6 @@ export class User {
   createdAt: Date;
   updatedAt: Date;
   lastSeenAt: Date;
-  posts: ObjectId[];
   enabled: boolean;
   _id: ObjectId;
 }

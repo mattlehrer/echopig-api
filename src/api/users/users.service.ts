@@ -7,6 +7,7 @@ import { UserDocument, UserModel } from './schemas/user.schema';
 import {
   CreateUserInput,
   UpdateUserInput,
+  UpdatePasswordInput,
   ObjectId,
 } from '../../graphql.classes';
 import { randomBytes } from 'crypto';
@@ -14,6 +15,7 @@ import { createTransport, SendMailOptions } from 'nodemailer';
 import { ConfigService } from '../../config/config.service';
 import { MongoError } from 'mongodb';
 import { AuthService } from '../auth/auth.service';
+// import { UserInputError } from 'apollo-server-core';
 
 @Injectable()
 export class UsersService {
@@ -77,15 +79,6 @@ export class UsersService {
     return user;
   }
 
-  async removePostByUser(
-    postId: ObjectId,
-    userId: ObjectId,
-  ): Promise<UserDocument> {
-    return await this.userModel.updateOne(userId, {
-      $pull: { posts: postId },
-    });
-  }
-
   /**
    * Updates a user in the database. If any value is invalid, it will still update the other
    * fields of the user.
@@ -99,7 +92,9 @@ export class UsersService {
    */
   async update(
     username: string,
-    fieldsToUpdate: UpdateUserInput,
+    fieldsToUpdate: UpdateUserInput & {
+      [fieldName: string]: boolean | string | UpdatePasswordInput;
+    },
   ): Promise<UserDocument | undefined> {
     if (fieldsToUpdate.username) {
       const duplicateUser = await this.findOneByUsername(
@@ -114,8 +109,9 @@ export class UsersService {
       if (duplicateUser || !emailValid) fieldsToUpdate.email = undefined;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const fields: any = {};
+    const fields: {
+      [fieldName: string]: boolean | string | UpdatePasswordInput;
+    } = {};
 
     if (fieldsToUpdate.password) {
       if (
@@ -186,7 +182,7 @@ export class UsersService {
     };
 
     return new Promise(resolve => {
-      transporter.sendMail(mailOptions, (err: Error, info) => {
+      transporter.sendMail(mailOptions, (err: Error | null, info) => {
         Logger.debug(info);
         if (err) {
           resolve(false);
@@ -290,17 +286,6 @@ export class UsersService {
 
   async findOneById(userId: ObjectId): Promise<UserDocument | undefined> {
     const user = await this.userModel.findById(userId).exec();
-    if (user) return user;
-    return undefined;
-  }
-
-  async findOneByIdAndPopulatePosts(
-    userId: ObjectId,
-  ): Promise<UserDocument | undefined> {
-    const user = await this.userModel
-      .findById(userId)
-      .populate({ path: 'posts', options: { sort: { updatedAt: -1 } } })
-      .exec();
     if (user) return user;
     return undefined;
   }

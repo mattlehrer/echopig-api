@@ -20,6 +20,8 @@ export class EpisodeResolver {
   async getPost(
     @Args('episode') episodeId: ObjectId,
   ): Promise<EpisodeDocument> {
-    return await this.episodesService.getEpisode(episodeId);
+    const episode = await this.episodesService.getEpisode(episodeId);
+    if (!episode) throw new Error('Episode does not exist');
+    return episode;
   }
 }

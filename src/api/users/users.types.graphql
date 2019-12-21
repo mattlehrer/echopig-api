@@ -3,7 +3,7 @@ scalar ObjectId
 
 type Query {
   users: [User!]!
-  user(username: String, email: String): User!
+  user(username: String, email: String, userId: ObjectId): User!
   forgotPassword(email: String): Boolean
 }
 
@@ -26,7 +26,6 @@ type User {
   createdAt: Date!
   updatedAt: Date!
   lastSeenAt: Date!
-  posts: [ObjectId!]!
   enabled: Boolean!
   _id: ObjectId!
 }

@@ -15,7 +15,6 @@ type Episode {
   releaseDate: Date
   duration: Int
   shareURLs: [String]
-  posts: [ObjectId!]
   parentalRating: String
   _id: ObjectId!
 }

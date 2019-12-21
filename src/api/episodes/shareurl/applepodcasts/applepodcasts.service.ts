@@ -2,14 +2,14 @@ import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import {
-  EpInputWithPodcastItunesId,
+  EpInputWithPodcastInit,
   PodcastInit,
 } from '../interfaces/episode-input-with-podcast-itunesid';
 import { parseDurationString } from './helpers';
 
 @Injectable()
 export class ApplePodcastsService {
-  async parse(url: string): Promise<EpInputWithPodcastItunesId> {
+  async parse(url: string): Promise<EpInputWithPodcastInit> {
     const { data } = await axios.get(url);
     if (data.length < 500) {
       throw new Error(`Bad share URL or episode removed at ${url}`);
@@ -17,8 +17,13 @@ export class ApplePodcastsService {
 
     const $ = cheerio.load(data);
 
+    const itunesMatch = url.match(/(?:\/id)(\d+)(?:\?)/);
+    if (!itunesMatch) throw new Error(`Could not find itunesId for ${url}`);
+    const itunesId = Number(itunesMatch[1]);
+    if (!itunesId) throw new Error(`Could not find itunesId for ${url}`);
+
     const podcastInit: PodcastInit = {
-      itunesId: Number(url.match(/(?:\/id)(\d+)(?:\?)/)[1]),
+      itunesId,
       appURL: url.split('?')[0],
     };
 

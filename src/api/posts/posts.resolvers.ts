@@ -23,8 +23,12 @@ export class PostResolver {
   }
 
   @Query('post')
-  async getPost(@Args('post') post: ObjectId): Promise<PostDocument> {
-    return await this.postsService.getPost(post);
+  async getPost(
+    @Args('post') postId: ObjectId,
+  ): Promise<PostDocument | undefined> {
+    const post = await this.postsService.getPost(postId);
+    if (!post) return undefined;
+    return post;
   }
 
   @Mutation('createPost')
@@ -50,7 +54,10 @@ export class PostResolver {
   @UseGuards(JwtAuthGuard)
   async updatePost(
     @Args('postId') postId: string,
-    @Args('fieldsToUpdate') fieldsToUpdate: UpdatePostInput,
+    @Args('fieldsToUpdate')
+    fieldsToUpdate: UpdatePostInput & {
+      [fieldName: string]: boolean | string;
+    },
     @CurrentUser() user: User,
   ): Promise<Post> {
     let post: PostDocument | undefined;

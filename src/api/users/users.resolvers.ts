@@ -2,13 +2,18 @@ import { UseGuards, Logger } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver, Context } from '@nestjs/graphql';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CreateUserInput, User, UpdateUserInput } from '../../graphql.classes';
+import {
+  CreateUserInput,
+  User,
+  UpdateUserInput,
+  UpdatePasswordInput,
+} from '../../graphql.classes';
 import { UsernameEmailAdminGuard } from '../auth/guards/username-email-admin.guard';
 import { AdminGuard } from '../auth/guards/admin.guard';
 import { UserInputError, ValidationError } from 'apollo-server-core';
 import { UserDocument } from './schemas/user.schema';
 import { AdminAllowedArgs } from '../decorators/admin-allowed-args';
-import { RequestWithUser } from '../types/inputs';
+import { RequestWithUser } from '../@types/declarations';
 
 @Resolver('User')
 export class UserResolver {
@@ -86,7 +91,10 @@ export class UserResolver {
   @UseGuards(JwtAuthGuard, UsernameEmailAdminGuard)
   async updateUser(
     @Args('username') username: string,
-    @Args('fieldsToUpdate') fieldsToUpdate: UpdateUserInput,
+    @Args('fieldsToUpdate')
+    fieldsToUpdate: UpdateUserInput & {
+      [fieldName: string]: boolean | string | UpdatePasswordInput;
+    },
     @Context('req') request: RequestWithUser,
   ): Promise<User> {
     let user: UserDocument | undefined;

@@ -17,7 +17,7 @@ export class EpisodesService {
 
   async findOrCreate(shareURL: string): Promise<EpisodeDocument> {
     // check for existing episode with this shareURL
-    let episode: EpisodeDocument | undefined = await this.episodeModel.findOne({
+    let episode: EpisodeDocument | null = await this.episodeModel.findOne({
       shareURLs: shareURL,
     });
     if (!episode) {
@@ -39,7 +39,7 @@ export class EpisodesService {
           Logger.log('Created new episode');
           Logger.log(episode);
         } catch (error) {
-          throw this.evaluateMongoError(error);
+          throw new MongoError(error);
         }
       }
     }
@@ -51,32 +51,9 @@ export class EpisodesService {
     return await this.episodeModel.find({ podcast });
   }
 
-  async getEpisode(episodeId: ObjectId): Promise<EpisodeDocument> {
-    return await this.episodeModel.findById(episodeId);
-  }
-
-  async removePostOfEpisode(postId: ObjectId): Promise<EpisodeDocument> {
-    return await this.episodeModel.updateOne(
-      { posts: postId },
-      { $pull: { posts: postId } },
-    );
-  }
-
-  private evaluateMongoError(
-    error: MongoError,
-    // createPostInput: CreatePostInput,
-  ): Error {
-    // if (error.code === 11000) {
-    //   if (
-    //     error.message
-    //       .toLowerCase()
-    //       .includes(normalizeEmail(createPostInput.email))
-    //   ) {
-    //     throw new Error(
-    //       `e-mail ${createPostInput.email} is already registered`,
-    //     );
-    //   }
-    // }
-    throw new Error(error.message);
+  async getEpisode(episodeId: ObjectId): Promise<EpisodeDocument | undefined> {
+    const episode = await this.episodeModel.findById(episodeId);
+    if (!episode) return undefined;
+    return episode;
   }
 }
