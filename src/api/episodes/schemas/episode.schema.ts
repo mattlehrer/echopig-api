@@ -1,5 +1,5 @@
 import { Schema, Document, model } from 'mongoose';
-import * as autopopulate from 'mongoose-autopopulate';
+import autopopulate = require('mongoose-autopopulate');
 import { generate as generateId } from 'shortid';
 import { Episode, ObjectId } from '../../../graphql.classes';
 
@@ -28,18 +28,6 @@ const EpisodeSchema: Schema = new Schema(
     mp3RedirectChain: [String],
     releaseDate: Date,
     shareURLs: [String],
-    posts: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: 'Post',
-      },
-    ],
-    // saves: [
-    //   {
-    //     type: Schema.Types.ObjectId,
-    //     ref: 'Save',
-    //   },
-    // ],
     duration: Number, // in seconds
     parentalRating: String,
     // ratingRiaa: Number,

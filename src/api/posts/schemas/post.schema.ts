@@ -1,9 +1,9 @@
 import { Schema, Document, model } from 'mongoose';
 import { Post } from '../../../graphql.classes';
 import { isURL } from 'validator';
-import * as autopopulate from 'mongoose-autopopulate';
+import autopopulate = require('mongoose-autopopulate');
 
-function validateURL(url) {
+function validateURL(url: string) {
   return isURL(url, {
     protocols: ['http', 'https'],
     // host_whitelist: [],
