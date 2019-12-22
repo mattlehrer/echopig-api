@@ -2,8 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from './users.service';
 import { getModelToken } from '@nestjs/mongoose';
 import { UserModel } from './schemas/user.schema';
-import { ConfigService } from '../../config/config.service';
-import { AuthService } from '../auth/auth.service';
+import { ConfigService } from 'src/config/config.service';
+import { AuthService } from 'src/api/auth/auth.service';
 
 jest.mock('../auth/auth.service');
 

@@ -1,5 +1,5 @@
 import { Schema, Document, model } from 'mongoose';
-import { Podcast } from '../../../graphql.classes';
+import { Podcast } from 'src/graphql.classes';
 
 export interface PodcastDocument extends Podcast, Document {
   // Declaring everything that is not in the GraphQL Schema for a Post

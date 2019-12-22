@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { AuthService } from '../auth.service';
+import { AuthService } from 'src/api/auth/auth.service';
 import { PassportStrategy } from '@nestjs/passport';
-import { JwtPayload } from '../interfaces/jwt-payload.interface';
+import { JwtPayload } from 'src/api/auth/interfaces/jwt-payload.interface';
 import { AuthenticationError } from 'apollo-server-core';
-import { ConfigService } from '../../../config/config.service';
+import { ConfigService } from 'src/config/config.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {

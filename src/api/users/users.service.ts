@@ -9,12 +9,12 @@ import {
   UpdateUserInput,
   UpdatePasswordInput,
   ObjectId,
-} from '../../graphql.classes';
+} from 'src/graphql.classes';
 import { randomBytes } from 'crypto';
 import { createTransport, SendMailOptions } from 'nodemailer';
-import { ConfigService } from '../../config/config.service';
+import { ConfigService } from 'src/config/config.service';
 import { MongoError } from 'mongodb';
-import { AuthService } from '../auth/auth.service';
+import { AuthService } from 'src/api/auth/auth.service';
 // import { UserInputError } from 'apollo-server-core';
 
 @Injectable()

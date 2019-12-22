@@ -1,11 +1,11 @@
 import { Resolver, Args, Query, Context } from '@nestjs/graphql';
-import { LoginUserInput, LoginResult } from '../../graphql.classes';
+import { LoginUserInput, LoginResult } from 'src/graphql.classes';
 import { AuthService } from './auth.service';
 import { AuthenticationError } from 'apollo-server-core';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { UseGuards } from '@nestjs/common';
-import { UserDocument } from '../users/schemas/user.schema';
-import { RequestWithUser } from '../@types/declarations';
+import { UserDocument } from 'src/api/users/schemas/user.schema';
+import { RequestWithUser } from 'src/api/@types/declarations';
 
 @Resolver('Auth')
 export class AuthResolver {

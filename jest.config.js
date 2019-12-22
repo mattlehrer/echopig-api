@@ -43,6 +43,9 @@ module.exports = {
 
   // An array of directory names to be searched recursively up from the requiring module's location
   moduleDirectories: ['node_modules', 'test', 'src'],
+  // moduleNameMapper: {
+  //   '^src/(.*)': '<rootDir>/$1',
+  // },
 
   // An array of file extensions your modules use
   moduleFileExtensions: ['js', 'ts', 'json'],
@@ -51,7 +54,7 @@ module.exports = {
   preset: 'ts-jest',
 
   // The root directory that Jest should scan for tests and modules within
-  // rootDir: 'src',
+  rootDir: 'src',
 
   // The paths to modules that run some code to configure or set up the testing environment before each test
   // setupFilesAfterEnv: [require.resolve('./test/setup-env')],

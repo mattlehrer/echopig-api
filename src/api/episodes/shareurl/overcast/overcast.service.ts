@@ -4,7 +4,7 @@ import * as cheerio from 'cheerio';
 import {
   EpInputWithPodcastInit,
   PodcastInit,
-} from '../interfaces/episode-input-with-podcast-itunesid';
+} from 'src/api/episodes/shareurl/interfaces/episode-input-with-podcast-itunesid';
 
 @Injectable()
 export class OvercastService {

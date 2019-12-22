@@ -1,7 +1,7 @@
 import { Schema, Document, model } from 'mongoose';
 import autopopulate = require('mongoose-autopopulate');
 import { generate as generateId } from 'shortid';
-import { Episode, ObjectId } from '../../../graphql.classes';
+import { Episode, ObjectId } from 'src/graphql.classes';
 
 interface EpisodeDocument extends Episode, Document {
   // Declaring everything that is not in the GraphQL Schema for a Post

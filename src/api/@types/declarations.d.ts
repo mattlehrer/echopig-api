@@ -1,6 +1,6 @@
 import { Request } from 'express';
-import { ObjectId } from '../../graphql.classes';
-import { UserDocument } from '../users/schemas/user.schema';
+import { ObjectId } from 'src/graphql.classes';
+import { UserDocument } from 'src/api/users/schemas/user.schema';
 
 export interface RequestWithUser extends Request {
   user: UserDocument | ObjectId;

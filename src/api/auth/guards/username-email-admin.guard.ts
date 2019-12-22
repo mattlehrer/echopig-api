@@ -1,7 +1,7 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
-import { User } from '../../../graphql.classes';
-import { UsersService } from '../../users/users.service';
+import { User } from 'src/graphql.classes';
+import { UsersService } from 'src/api/users/users.service';
 import { AuthenticationError } from 'apollo-server-core';
 import { Reflector } from '@nestjs/core';
 

@@ -1,10 +1,10 @@
 import { Injectable, forwardRef, Inject } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '../users/users.service';
+import { UsersService } from 'src/api/users/users.service';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
-import { LoginUserInput, User, LoginResult } from '../../graphql.classes';
-import { UserDocument } from '../users/schemas/user.schema';
-import { ConfigService } from '../../config/config.service';
+import { LoginUserInput, User, LoginResult } from 'src/graphql.classes';
+import { UserDocument } from 'src/api/users/schemas/user.schema';
+import { ConfigService } from 'src/config/config.service';
 
 @Injectable()
 export class AuthService {

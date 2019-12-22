@@ -8,10 +8,10 @@ import {
   Post,
   User,
   ObjectId,
-} from '../../graphql.classes';
+} from 'src/graphql.classes';
 import { PostDocument } from './schemas/post.schema';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CurrentUser } from '../decorators/current-user';
+import { JwtAuthGuard } from 'src/api/auth/guards/jwt-auth.guard';
+import { CurrentUser } from 'src/api/decorators/current-user';
 
 @Resolver('Post')
 export class PostResolver {

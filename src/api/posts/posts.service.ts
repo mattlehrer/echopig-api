@@ -4,14 +4,14 @@ import { MongoError } from 'mongodb';
 import { Model } from 'mongoose';
 import * as uuid from 'uuid/v4';
 import { PostDocument } from './schemas/post.schema';
-import { EpisodesService } from '../episodes/episodes.service';
+import { EpisodesService } from 'src/api/episodes/episodes.service';
 import {
   CreatePostInput,
   UpdatePostInput,
   ObjectId,
-} from '../../graphql.classes';
-import { EpisodeDocument } from '../episodes/schemas/episode.schema';
-import { ObjectIdPair } from '../@types/declarations';
+} from 'src/graphql.classes';
+import { EpisodeDocument } from 'src/api/episodes/schemas/episode.schema';
+import { ObjectIdPair } from 'src/api/@types/declarations';
 
 @Injectable()
 export class PostsService {

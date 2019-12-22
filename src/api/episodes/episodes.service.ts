@@ -4,7 +4,7 @@ import { MongoError } from 'mongodb';
 import { Model } from 'mongoose';
 import * as RedirectChain from 'redirect-chain';
 import { EpisodeDocument } from './schemas/episode.schema';
-import { ObjectId } from '../../graphql.classes';
+import { ObjectId } from 'src/graphql.classes';
 import { ShareurlService } from './shareurl/shareurl.service';
 
 @Injectable()

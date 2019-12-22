@@ -3,10 +3,12 @@ import { getModelToken } from '@nestjs/mongoose';
 import { EpisodeModel } from './schemas/episode.schema';
 import { EpisodesService } from './episodes.service';
 import { ShareurlService } from './shareurl/shareurl.service';
-import { PodcastsService } from '../podcasts/podcasts.service';
+import { PodcastsService } from 'src/api/podcasts/podcasts.service';
+// import { PodcastsService } from 'src/api/podcasts/podcasts.service';
 
 jest.mock('./shareurl/shareurl.service');
-// jest.mock('../podcasts/podcasts.service');
+jest.mock('src/api/podcasts/podcasts.service');
+// jest.mock('src/api/podcasts/podcasts.service');
 
 describe('EpisodesService', () => {
   let service: EpisodesService;

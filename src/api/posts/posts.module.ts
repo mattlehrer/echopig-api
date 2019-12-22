@@ -3,10 +3,10 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { PostsService } from './posts.service';
 import { PostSchema } from './schemas/post.schema';
 import { PostResolver } from './posts.resolvers';
-import { DateScalar } from '../scalars/date.scalar';
-import { ObjectIdScalar } from '../scalars/object-id.scalar';
-import { UsersModule } from '../users/users.module';
-import { EpisodesModule } from '../episodes/episodes.module';
+import { DateScalar } from 'src/api/scalars/date.scalar';
+import { ObjectIdScalar } from 'src/api/scalars/object-id.scalar';
+import { UsersModule } from 'src/api/users/users.module';
+import { EpisodesModule } from 'src/api/episodes/episodes.module';
 // import { ConfigModule } from 'src/config/config.module';
 
 @Module({

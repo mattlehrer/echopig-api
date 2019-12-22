@@ -1,5 +1,5 @@
 import { Schema, Document, model } from 'mongoose';
-import { Post } from '../../../graphql.classes';
+import { Post } from 'src/graphql.classes';
 import { isURL } from 'validator';
 import autopopulate = require('mongoose-autopopulate');
 

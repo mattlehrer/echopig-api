@@ -6,7 +6,7 @@ import * as moment from 'moment';
 import {
   EpInputWithPodcastInit,
   PodcastInit,
-} from '../interfaces/episode-input-with-podcast-itunesid';
+} from 'src/api/episodes/shareurl/interfaces/episode-input-with-podcast-itunesid';
 
 @Injectable()
 export class BreakerService {
