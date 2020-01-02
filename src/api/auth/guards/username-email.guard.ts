@@ -10,7 +10,6 @@ import { AuthenticationError } from 'apollo-server-core';
 // or if the user is admin
 @Injectable()
 export class UsernameEmailGuard implements CanActivate {
-  constructor() {}
   // constructor(private usersService: UsersService) {}
 
   canActivate(context: ExecutionContext): boolean {
