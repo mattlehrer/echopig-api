@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { MongoError } from 'mongodb';
 import { Model } from 'mongoose';
 import * as uuid from 'uuid/v4';
+import { InjectEventEmitter } from 'nest-emitter';
 import { PostDocument } from './schemas/post.schema';
 import { EpisodesService } from 'src/api/episodes/episodes.service';
 import {
@@ -12,13 +13,18 @@ import {
 } from 'src/graphql.classes';
 import { EpisodeDocument } from 'src/api/episodes/schemas/episode.schema';
 import { ObjectIdPair } from 'src/api/@types/declarations';
+import { UserEventEmitter, onFeedUpdate } from 'src/api/users/users.events';
 
 @Injectable()
 export class PostsService {
   constructor(
     @InjectModel('Post') private readonly postModel: Model<PostDocument>,
     private episodesService: EpisodesService,
+    @InjectEventEmitter() private readonly emitter: UserEventEmitter,
   ) {}
+  onModuleInit() {
+    this.emitter.on('updateFeed', async user => await onFeedUpdate(user));
+  }
 
   async create(createPostInput: CreatePostInput): Promise<PostDocument> {
     const createdPost = new this.postModel(createPostInput);
@@ -41,6 +47,9 @@ export class PostsService {
     } catch (error) {
       throw new MongoError(error);
     }
+
+    this.emitter.emit('updateFeed', post.byUser._id);
+
     return post;
   }
 
@@ -67,6 +76,8 @@ export class PostsService {
 
     if (!post) return undefined;
 
+    this.emitter.emit('updateFeed', post.byUser._id);
+
     return post;
   }
 
@@ -79,6 +90,9 @@ export class PostsService {
     // if (!user) Logger.error(`Did not delete post ${_id} from any user.`);
     // const episode = await this.episodesService.removePostOfEpisode(_id);
     // if (!episode) Logger.error(`Did not delete post ${_id} from any episode.`);
+
+    this.emitter.emit('updateFeed', byUser._id);
+
     return _id;
   }
 

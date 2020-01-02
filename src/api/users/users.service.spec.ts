@@ -2,16 +2,20 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from './users.service';
 import { getModelToken } from '@nestjs/mongoose';
 import { UserModel } from './schemas/user.schema';
-import { ConfigService } from 'src/config/config.service';
-import { AuthService } from 'src/api/auth/auth.service';
+import { ConfigService } from '../../config/config.service';
+import { AuthService } from '../auth/auth.service';
+import { NestEmitterModule } from 'nest-emitter';
 
 jest.mock('../auth/auth.service');
+jest.mock('../../config/config.service');
+jest.mock('nest-emitter');
 
 describe('UsersService', () => {
   let service: UsersService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [NestEmitterModule],
       providers: [
         UsersService,
         {

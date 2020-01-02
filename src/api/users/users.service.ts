@@ -1,6 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
+import { InjectEventEmitter } from 'nest-emitter';
 import { normalizeEmail } from 'validator';
 import { generate as generateId } from 'shortid';
 import { UserDocument, UserModel } from './schemas/user.schema';
@@ -15,16 +16,19 @@ import { createTransport, SendMailOptions } from 'nodemailer';
 import { ConfigService } from 'src/config/config.service';
 import { MongoError } from 'mongodb';
 import { AuthService } from 'src/api/auth/auth.service';
-// import { UserInputError } from 'apollo-server-core';
+import { UserEventEmitter, onNewUser } from './users.events';
 
 @Injectable()
-export class UsersService {
+export class UsersService implements OnModuleInit {
   constructor(
     @InjectModel('User') private readonly userModel: Model<UserDocument>,
     private configService: ConfigService,
     private authService: AuthService,
+    @InjectEventEmitter() private readonly emitter: UserEventEmitter,
   ) {}
-
+  onModuleInit() {
+    this.emitter.on('newUser', async user => await onNewUser(user));
+  }
   /**
    * Returns if the user has 'admin' set on the permissions array
    *
@@ -251,6 +255,9 @@ export class UsersService {
     } catch (error) {
       throw this.evaluateMongoError(error, createUserInput);
     }
+
+    this.emitter.emit('newUser', user);
+
     return user;
   }
 
