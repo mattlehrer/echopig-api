@@ -42,7 +42,7 @@ export class ShareurlService {
     const domain = domainParts.slice(domainParts.length - 2).join('.');
     const handler = this.HANDLERS[domain];
     if (!handler) {
-      Logger.error(`No handler for shareURL: ${url}`);
+      Logger.error(`No handler for shareURL: ${url}`, ShareurlService.name);
       throw new Error(`Podcast app not yet implemented: ${url}`);
     }
 

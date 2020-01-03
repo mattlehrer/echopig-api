@@ -24,10 +24,10 @@ type Post {
 }
 
 input CreatePostInput {
-  shareURL: String!
-  comment: String
   byUser: ObjectId
+  shareURL: String!
   enabled: Boolean
+  comment: String
 }
 
 input UpdatePostInput {

@@ -124,4 +124,12 @@ export class ConfigService {
   get mongoAuthEnabled(): boolean {
     return Boolean(this.envConfig.MONGO_AUTH_ENABLED).valueOf();
   }
+
+  get awsAccessKeyId(): string | undefined {
+    return String(this.envConfig.AWS_ACCESS_KEY_ID).valueOf();
+  }
+
+  get awsSecretAccessKey(): string | undefined {
+    return String(this.envConfig.AWS_SECRET_ACCESS_KEY).valueOf();
+  }
 }

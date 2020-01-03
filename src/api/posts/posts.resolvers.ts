@@ -40,9 +40,9 @@ export class PostResolver {
     let createdPost: Post | undefined;
     try {
       createdPost = await this.postsService.create({
+        ...createPostInput,
         byUser: user._id,
         enabled: true,
-        ...createPostInput,
       });
     } catch (error) {
       throw new UserInputError(error.message);

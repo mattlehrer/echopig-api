@@ -5,6 +5,8 @@ import { MongooseModule, MongooseModuleOptions } from '@nestjs/mongoose';
 import { join } from 'path';
 import { ConfigModule } from './config/config.module';
 import { ConfigService } from './config/config.service';
+import { NestEmitterModule } from 'nest-emitter';
+import { EventEmitter } from 'events';
 // import { AppService } from './app.service';
 // import { AppController } from './app.controller';
 
@@ -40,6 +42,7 @@ import { ConfigService } from './config/config.service';
     }),
     ConfigModule,
     ApiModule,
+    NestEmitterModule.forRoot(new EventEmitter()),
   ],
   // controllers: [AppController],
   // providers: [AppService],

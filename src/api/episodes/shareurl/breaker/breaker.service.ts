@@ -79,9 +79,9 @@ export class BreakerService {
       // duration,
     };
 
-    Logger.log(`BreakerService parsed ${url}:`);
-    Logger.log(episodeData);
-    Logger.log(podcastInit);
+    Logger.log(`BreakerService parsed ${url}:`, BreakerService.name);
+    Logger.log(episodeData, BreakerService.name);
+    Logger.log(podcastInit, BreakerService.name);
 
     return { episodeData, podcastInit };
   }

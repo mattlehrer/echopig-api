@@ -15,7 +15,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handleRequest(err: any, user: any, info: any) {
-    Logger.debug(info);
+    if (info) Logger.debug(`info: ${info}`, JwtAuthGuard.name);
     if (err || !user) {
       throw err || new AuthenticationError('Could not authenticate with token');
     }

@@ -42,9 +42,9 @@ export class PocketcastsService {
       duration: $('#duration_time').data('duration'),
     };
 
-    Logger.log(`PocketcastsService parsed ${url}:`);
-    Logger.log(episodeData);
-    Logger.log(podcastInit);
+    Logger.log(`PocketcastsService parsed ${url}:`, PocketcastsService.name);
+    Logger.log(episodeData, PocketcastsService.name);
+    Logger.log(podcastInit, PocketcastsService.name);
 
     return { episodeData, podcastInit };
   }

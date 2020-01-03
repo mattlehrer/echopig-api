@@ -23,8 +23,8 @@ export class PodcastsService {
 
       try {
         podcast = await createdPodcast.save();
-        Logger.log('Created new podcast');
-        Logger.log(podcast);
+        Logger.log('Created new podcast', PodcastsService.name);
+        Logger.log(podcast, PodcastsService.name);
       } catch (error) {
         throw new MongoError(error);
       }
@@ -43,18 +43,19 @@ export class PodcastsService {
         limit: 1,
       });
       const podcastData = results[0];
-      Logger.debug(podcastData);
+      Logger.debug(podcastData, PodcastsService.name);
       if (title !== podcastData.collectionName) {
         Logger.warn(
           `Creating podcast without exact match on title;\n from share URL: ${title} and from iTunes: ${podcastData.collectionName}`,
+          PodcastsService.name,
         );
       }
       const createdPodcast = new this.podcastModel(podcastData);
 
       try {
         podcast = await createdPodcast.save();
-        Logger.log('Created new podcast');
-        Logger.log(podcast);
+        Logger.log('Created new podcast', PodcastsService.name);
+        Logger.log(podcast, PodcastsService.name);
       } catch (error) {
         throw new MongoError(error);
       }

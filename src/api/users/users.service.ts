@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { InjectEventEmitter } from 'nest-emitter';
@@ -16,19 +16,17 @@ import { createTransport, SendMailOptions } from 'nodemailer';
 import { ConfigService } from 'src/config/config.service';
 import { MongoError } from 'mongodb';
 import { AuthService } from 'src/api/auth/auth.service';
-import { UserEventEmitter, onNewUser } from './users.events';
+import { UserEventEmitter } from './users.events';
 
 @Injectable()
-export class UsersService implements OnModuleInit {
+export class UsersService {
   constructor(
     @InjectModel('User') private readonly userModel: Model<UserDocument>,
     private configService: ConfigService,
     private authService: AuthService,
     @InjectEventEmitter() private readonly emitter: UserEventEmitter,
   ) {}
-  onModuleInit() {
-    this.emitter.on('newUser', async user => await onNewUser(user));
-  }
+
   /**
    * Returns if the user has 'admin' set on the permissions array
    *
@@ -187,7 +185,7 @@ export class UsersService implements OnModuleInit {
 
     return new Promise(resolve => {
       transporter.sendMail(mailOptions, (err: Error | null, info) => {
-        Logger.debug(info);
+        Logger.debug(info, UsersService.name);
         if (err) {
           resolve(false);
           return;
@@ -250,13 +248,13 @@ export class UsersService implements OnModuleInit {
     let user: UserDocument | undefined;
     try {
       user = await createdUser.save();
-      Logger.log('Created new user:');
-      Logger.log(user);
+      Logger.log('Created new user:', UsersService.name);
+      Logger.log(user, UsersService.name);
     } catch (error) {
       throw this.evaluateMongoError(error, createUserInput);
     }
 
-    this.emitter.emit('newUser', user);
+    this.emitter.emit('newUser', user._id);
 
     return user;
   }

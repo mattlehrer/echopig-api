@@ -5,10 +5,10 @@
 
 /* tslint:disable */
 export class CreatePostInput {
-  shareURL: string;
-  comment?: string;
   byUser?: ObjectId;
+  shareURL: string;
   enabled?: boolean;
+  comment?: string;
 }
 
 export class CreateUserInput {
@@ -151,6 +151,8 @@ export class User {
   username: string;
   normalizedUsername?: string;
   email: string;
+  name?: string;
+  explicit?: boolean;
   normalizedEmail?: string;
   permissions: string[];
   postTag: string;

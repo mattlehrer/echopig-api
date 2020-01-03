@@ -40,9 +40,12 @@ export class ApplePodcastsService {
       ),
     };
 
-    Logger.log(`ApplePodcastsService parsed ${url}:`);
-    Logger.log(episodeData);
-    Logger.log(podcastInit);
+    Logger.log(
+      `ApplePodcastsService parsed ${url}:`,
+      ApplePodcastsService.name,
+    );
+    Logger.log(episodeData, ApplePodcastsService.name);
+    Logger.log(podcastInit, ApplePodcastsService.name);
 
     return { episodeData, podcastInit };
   }

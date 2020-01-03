@@ -44,9 +44,9 @@ export class StitcherService {
       duration: data.match(/(?:duration: )(\d*)/)[1],
     };
 
-    Logger.log(`StitcherService parsed ${url}:`);
-    Logger.log(episodeData);
-    Logger.log(podcastInit);
+    Logger.log(`StitcherService parsed ${url}:`, StitcherService.name);
+    Logger.log(episodeData, StitcherService.name);
+    Logger.log(podcastInit, StitcherService.name);
 
     return { episodeData, podcastInit };
   }

@@ -49,7 +49,7 @@ export class UserResolver {
   @Query('forgotPassword')
   async forgotPassword(@Args('email') email: string): Promise<void> {
     const worked = await this.usersService.forgotPassword(email);
-    Logger.debug(worked);
+    Logger.debug(worked, UsersService.name);
   }
 
   // What went wrong is intentionally not sent (wrong username or code or user not in reset status)

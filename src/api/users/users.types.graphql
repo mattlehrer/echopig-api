@@ -19,6 +19,8 @@ type User {
   username: String!
   normalizedUsername: String
   email: String!
+  name: String
+  explicit: Boolean
   normalizedEmail: String
   permissions: [String!]!
   postTag: String!

@@ -13,18 +13,15 @@ import {
 } from 'src/graphql.classes';
 import { EpisodeDocument } from 'src/api/episodes/schemas/episode.schema';
 import { ObjectIdPair } from 'src/api/@types/declarations';
-import { UserEventEmitter, onFeedUpdate } from 'src/api/users/users.events';
+import { PostEventEmitter } from './posts.events';
 
 @Injectable()
 export class PostsService {
   constructor(
     @InjectModel('Post') private readonly postModel: Model<PostDocument>,
     private episodesService: EpisodesService,
-    @InjectEventEmitter() private readonly emitter: UserEventEmitter,
+    @InjectEventEmitter() private readonly emitter: PostEventEmitter,
   ) {}
-  onModuleInit() {
-    this.emitter.on('updateFeed', async user => await onFeedUpdate(user));
-  }
 
   async create(createPostInput: CreatePostInput): Promise<PostDocument> {
     const createdPost = new this.postModel(createPostInput);
@@ -42,13 +39,16 @@ export class PostsService {
     let post: PostDocument | undefined;
     try {
       post = await createdPost.save();
-      Logger.log('Created new post:');
-      Logger.log(post);
+      Logger.log('Created new post:', PostsService.name);
+      Logger.log(post, PostsService.name);
     } catch (error) {
       throw new MongoError(error);
     }
-
-    this.emitter.emit('updateFeed', post.byUser._id);
+    Logger.debug(
+      `emitting feedNeedsUpdate from PostsService.create for ${post.byUser}`,
+      PostsService.name,
+    );
+    this.emitter.emit('feedNeedsUpdate', post.byUser);
 
     return post;
   }
@@ -76,7 +76,7 @@ export class PostsService {
 
     if (!post) return undefined;
 
-    this.emitter.emit('updateFeed', post.byUser._id);
+    this.emitter.emit('feedNeedsUpdate', post.byUser._id);
 
     return post;
   }
@@ -84,20 +84,26 @@ export class PostsService {
   async delete({ _id, byUser }: ObjectIdPair): Promise<ObjectId> {
     const { deletedCount } = await this.postModel.deleteOne({ _id, byUser });
     if (!deletedCount) return undefined;
-    Logger.log(`Deleted post: ${_id}`);
+    Logger.log(`Deleted post: ${_id}`, PostsService.name);
 
     // const user = await this.usersService.removePostByUser(_id, byUser);
     // if (!user) Logger.error(`Did not delete post ${_id} from any user.`);
     // const episode = await this.episodesService.removePostOfEpisode(_id);
     // if (!episode) Logger.error(`Did not delete post ${_id} from any episode.`);
 
-    this.emitter.emit('updateFeed', byUser._id);
+    Logger.debug(
+      'emitting feedNeedsUpdate from PostsService.delete',
+      PostsService.name,
+    );
+    this.emitter.emit('feedNeedsUpdate', byUser._id);
 
     return _id;
   }
 
   async getAllPostsByUser(byUser: ObjectId): Promise<PostDocument[]> {
-    return await this.postModel.find({ byUser });
+    return await this.postModel.find({ byUser }, null, {
+      sort: { updatedAt: -1 },
+    });
   }
 
   async getPost(postId: ObjectId): Promise<PostDocument | null> {

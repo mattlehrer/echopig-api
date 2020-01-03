@@ -36,8 +36,8 @@ export class EpisodesService {
         const createdEpisode = new this.episodeModel(episodeData);
         try {
           episode = await createdEpisode.save();
-          Logger.log('Created new episode');
-          Logger.log(episode);
+          Logger.log('Created new episode', EpisodesService.name);
+          Logger.log(episode, EpisodesService.name);
         } catch (error) {
           throw new MongoError(error);
         }

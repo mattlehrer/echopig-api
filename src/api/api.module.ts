@@ -4,6 +4,7 @@ import { AuthModule } from './auth/auth.module';
 import { PostsModule } from './posts/posts.module';
 import { EpisodesModule } from './episodes/episodes.module';
 import { PodcastsModule } from './podcasts/podcasts.module';
+import { RssModule } from './rss/rss.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { PodcastsModule } from './podcasts/podcasts.module';
     PostsModule,
     EpisodesModule,
     PodcastsModule,
+    RssModule,
   ],
   providers: [],
 })

@@ -46,9 +46,9 @@ export class OvercastService {
       ),
     };
 
-    Logger.log(`OvercastService parsed ${url}:`);
-    Logger.log(episodeData);
-    Logger.log(podcastInit);
+    Logger.log(`OvercastService parsed ${url}:`, OvercastService.name);
+    Logger.log(episodeData, OvercastService.name);
+    Logger.log(podcastInit, OvercastService.name);
 
     return { episodeData, podcastInit };
   }
