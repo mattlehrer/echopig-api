@@ -1,13 +1,13 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import * as Podcast from 'podcast';
-// import * as AWS from 'aws-sdk';
 import { writeFileSync } from 'fs';
-import { PostDocument } from '../posts/schemas/post.schema';
-import { ObjectId } from 'src/graphql.classes';
-import { UsersService } from '../users/users.service';
-import { PostsService } from '../posts/posts.service';
+// import * as AWS from 'aws-sdk';
+import { PostDocument } from 'src/api/posts/schemas/post.schema';
+// import { ObjectId } from 'src/graphql.classes';
+// import { UsersService } from 'src/api/users/users.service';
+import { PostsService } from 'src/api/posts/posts.service';
 // import { ConfigService } from 'src/config/config.service';
-import { UserDocument } from '../users/schemas/user.schema';
+import { UserDocument } from 'src/api/users/schemas/user.schema';
 import { InjectEventEmitter } from 'nest-emitter';
 import { PostEventEmitter } from 'src/api/posts/posts.events';
 import { UserEventEmitter } from 'src/api/users/users.events';
@@ -15,22 +15,28 @@ import { UserEventEmitter } from 'src/api/users/users.events';
 @Injectable()
 export class RssService implements OnModuleInit {
   constructor(
-    // private configService: ConfigService,
-    private usersService: UsersService,
+    // private usersService: UsersService,
     private postsService: PostsService,
+    // private configService: ConfigService,
     @InjectEventEmitter() private readonly postEventEmitter: PostEventEmitter,
     @InjectEventEmitter() private readonly userEventEmitter: UserEventEmitter,
   ) {}
   onModuleInit() {
-    this.postEventEmitter.on('feedNeedsUpdate', async userId => {
-      Logger.debug(`Posts event! Update feed for ${userId}`, RssService.name);
-      await this.updateAndCacheFeed({ userId });
+    this.postEventEmitter.on('feedNeedsUpdate', async user => {
+      Logger.debug(
+        `Posts event! Update feed for ${user.username}`,
+        RssService.name,
+      );
+      await this.updateAndCacheFeed({ user });
       // @TODO: implement Saves
       // await this.updateAndCacheFeed({ userId, publicFeed = false });
     });
-    this.userEventEmitter.on('newUser', async userId => {
-      Logger.debug(`User event! New user ${userId}`, RssService.name);
-      await this.updateAndCacheFeed({ userId });
+    this.userEventEmitter.on('newOrUpdatedUser', async user => {
+      Logger.debug(
+        `User event! New or updated user ${user.username}`,
+        RssService.name,
+      );
+      await this.updateAndCacheFeed({ user });
       // @TODO: implement Saves
       // await this.updateAndCacheFeed({ userId, publicFeed = false });
     });
@@ -78,7 +84,7 @@ export class RssService implements OnModuleInit {
       language: 'en',
       // categories: ['Personal Journals'],
       // itunesCategory: ['Personal Journals'],
-      pubDate: items.length > 0 ? items[0].updatedAt : user.updatedAt,
+      pubDate: new Date(),
       ttl: 60,
       // itunesOwner: {
       //   name: user.name || user.username,
@@ -128,18 +134,21 @@ export class RssService implements OnModuleInit {
   }
 
   async updateAndCacheFeed({
-    userId,
+    user,
     publicFeed = true,
   }: {
-    userId: ObjectId;
+    user: UserDocument;
     publicFeed?: boolean;
   }): Promise<string> {
-    const user = await this.usersService.findOneById(userId);
+    if (!user.username)
+      throw new Error(
+        `Can't create feed for ${user} because there is no username.`,
+      );
     const xml = await this.generateFeed({ user, publicFeed });
 
     Logger.debug('writing file', RssService.name);
-    writeFileSync(`feed-${userId}.rss`, xml);
-    return `feed-${userId}.rss`;
+    writeFileSync(`feed-${user.username}.rss`, xml);
+    return `feed-${user.username}.rss`;
 
     // AWS.config.update({
     //   secretAccessKey: this.configService.awsSecretAccessKey,

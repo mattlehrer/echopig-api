@@ -4,7 +4,7 @@ import { ObjectId } from 'src/graphql.classes';
 
 interface UserEvents {
   notification: string;
-  newUser: (userId: ObjectId) => void;
+  newOrUpdatedUser: (userId: ObjectId) => void;
 }
 
 export type UserEventEmitter = StrictEventEmitter<EventEmitter, UserEvents>;

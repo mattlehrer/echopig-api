@@ -41,7 +41,7 @@ export class PostResolver {
     try {
       createdPost = await this.postsService.create({
         ...createPostInput,
-        byUser: user._id,
+        byUser: user,
         enabled: true,
       });
     } catch (error) {

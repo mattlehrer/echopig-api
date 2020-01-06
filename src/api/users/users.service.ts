@@ -143,6 +143,8 @@ export class UsersService {
 
     if (!user) return undefined;
 
+    this.emitter.emit('newOrUpdatedUser', user);
+
     return user;
   }
 
@@ -254,7 +256,7 @@ export class UsersService {
       throw this.evaluateMongoError(error, createUserInput);
     }
 
-    this.emitter.emit('newUser', user._id);
+    this.emitter.emit('newOrUpdatedUser', user);
 
     return user;
   }
@@ -315,6 +317,8 @@ export class UsersService {
   async deleteAllUsers(): Promise<void> {
     await this.userModel.deleteMany({});
   }
+
+  // @TODO: disable User account and disable all posts
 
   /**
    * Reads a mongo database error and attempts to provide a better error message. If

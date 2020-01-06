@@ -48,6 +48,7 @@ export class PostsService {
       `emitting feedNeedsUpdate from PostsService.create for ${post.byUser}`,
       PostsService.name,
     );
+    Logger.debug(post.byUser);
     this.emitter.emit('feedNeedsUpdate', post.byUser);
 
     return post;
@@ -69,33 +70,35 @@ export class PostsService {
       }
     }
     let post: PostDocument | null = null;
-    post = await this.postModel.findOneAndUpdate({ _id, byUser }, fields, {
-      new: true,
-      runValidators: true,
-    });
+    post = await this.postModel.findOneAndUpdate(
+      { _id, byUser: byUser._id },
+      fields,
+      {
+        new: true,
+        runValidators: true,
+      },
+    );
 
     if (!post) return undefined;
 
-    this.emitter.emit('feedNeedsUpdate', post.byUser._id);
+    this.emitter.emit('feedNeedsUpdate', post.byUser);
 
     return post;
   }
 
   async delete({ _id, byUser }: ObjectIdPair): Promise<ObjectId> {
-    const { deletedCount } = await this.postModel.deleteOne({ _id, byUser });
+    const { deletedCount } = await this.postModel.deleteOne({
+      _id,
+      byUser: byUser._id,
+    });
     if (!deletedCount) return undefined;
     Logger.log(`Deleted post: ${_id}`, PostsService.name);
-
-    // const user = await this.usersService.removePostByUser(_id, byUser);
-    // if (!user) Logger.error(`Did not delete post ${_id} from any user.`);
-    // const episode = await this.episodesService.removePostOfEpisode(_id);
-    // if (!episode) Logger.error(`Did not delete post ${_id} from any episode.`);
 
     Logger.debug(
       'emitting feedNeedsUpdate from PostsService.delete',
       PostsService.name,
     );
-    this.emitter.emit('feedNeedsUpdate', byUser._id);
+    this.emitter.emit('feedNeedsUpdate', byUser);
 
     return _id;
   }
