@@ -1,12 +1,10 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import * as Podcast from 'podcast';
-import { writeFileSync } from 'fs';
-// import * as AWS from 'aws-sdk';
+// import { writeFileSync } from 'fs';
+import * as AWS from 'aws-sdk';
 import { PostDocument } from 'src/api/posts/schemas/post.schema';
-// import { ObjectId } from 'src/graphql.classes';
-// import { UsersService } from 'src/api/users/users.service';
 import { PostsService } from 'src/api/posts/posts.service';
-// import { ConfigService } from 'src/config/config.service';
+import { ConfigService } from 'src/config/config.service';
 import { UserDocument } from 'src/api/users/schemas/user.schema';
 import { InjectEventEmitter } from 'nest-emitter';
 import { PostEventEmitter } from 'src/api/posts/posts.events';
@@ -17,7 +15,7 @@ export class RssService implements OnModuleInit {
   constructor(
     // private usersService: UsersService,
     private postsService: PostsService,
-    // private configService: ConfigService,
+    private configService: ConfigService,
     @InjectEventEmitter() private readonly postEventEmitter: PostEventEmitter,
     @InjectEventEmitter() private readonly userEventEmitter: UserEventEmitter,
   ) {}
@@ -155,33 +153,34 @@ export class RssService implements OnModuleInit {
 
     const xml = await this.generateFeed({ user, publicFeed });
 
-    Logger.debug('writing file', RssService.name);
-    writeFileSync(`feed-${user.username}.rss`, xml);
-    return `feed-${user.username}.rss`;
-
-    // AWS.config.update({
-    //   secretAccessKey: this.configService.awsSecretAccessKey,
-    //   accessKeyId: this.configService.awsAccessKeyId,
-    //   region: 'us-east-1',
-    //   signatureVersion: 'v4', //API version
-    // });
-    // const s3 = new AWS.S3({
-    //   apiVersion: '2006-03-01',
-    // });
-    // let data: AWS.S3.ManagedUpload.SendData;
-    // try {
-    //   data = await s3
-    //     .upload({
-    //       ACL: 'public-read',
-    //       Bucket: 'rss',
-    //       Key: user.normalizedUsername,
-    //       Body: xml,
-    //       ContentType: 'application/rss+xml',
-    //     })
-    //     .promise();
-    // } catch (e) {
-    //   throw e;
-    // }
-    // return data.Location;
+    // Logger.debug('writing file', RssService.name);
+    // writeFileSync(`feed-${user.username}.rss`, xml);
+    // return `feed-${user.username}.rss`;
+    if (this.configService.env === 'production') {
+      const s3 = new AWS.S3({
+        apiVersion: '2006-03-01',
+        secretAccessKey: this.configService.awsSecretAccessKey,
+        accessKeyId: this.configService.awsAccessKeyId,
+        region: 'us-east-1',
+        signatureVersion: 'v4', //API version
+      });
+      let data: AWS.S3.ManagedUpload.SendData;
+      try {
+        data = await s3
+          .upload({
+            ACL: 'public-read',
+            Bucket: this.configService.s3Bucket,
+            Key: user.normalizedUsername,
+            Body: xml,
+            ContentType: 'application/rss+xml',
+          })
+          .promise();
+      } catch (e) {
+        throw e;
+      }
+      Logger.debug(data);
+      return data.Location;
+    }
+    return xml;
   }
 }
