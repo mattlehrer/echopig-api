@@ -44,11 +44,6 @@ export class PostsService {
     } catch (error) {
       throw new MongoError(error);
     }
-    Logger.debug(
-      `emitting feedNeedsUpdate from PostsService.create for ${post.byUser}`,
-      PostsService.name,
-    );
-    Logger.debug(post.byUser);
     this.emitter.emit('feedNeedsUpdate', post.byUser);
 
     return post;
