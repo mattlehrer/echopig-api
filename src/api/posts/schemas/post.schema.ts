@@ -44,7 +44,7 @@ const PostSchema: Schema = new Schema(
       required: true,
     },
     guid: String,
-    enabled: { type: Boolean, required: true },
+    enabled: { type: Boolean, default: true, required: true },
   },
   {
     timestamps: true,
