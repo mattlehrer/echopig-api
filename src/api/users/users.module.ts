@@ -7,12 +7,22 @@ import { DateScalar } from 'src/api/scalars/date.scalar';
 import { ConfigModule } from 'src/config/config.module';
 import { AuthModule } from 'src/api/auth/auth.module';
 import { ObjectIdScalar } from 'src/api/scalars/object-id.scalar';
+import { EmailModule } from 'src/utils/email/email.module';
+import { PasswordResetTokenSchema } from './schemas/password-reset-token.schema';
+import { SignUpTokenSchema } from './schemas/signup-token.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: 'User', schema: UserSchema }]),
+    MongooseModule.forFeature([
+      { name: 'PasswordResetToken', schema: PasswordResetTokenSchema },
+    ]),
+    MongooseModule.forFeature([
+      { name: 'SignUpToken', schema: SignUpTokenSchema },
+    ]),
     ConfigModule,
     forwardRef(() => AuthModule),
+    EmailModule,
   ],
   exports: [UsersService],
   controllers: [],

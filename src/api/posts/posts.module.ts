@@ -8,16 +8,26 @@ import { ObjectIdScalar } from 'src/api/scalars/object-id.scalar';
 import { UsersModule } from 'src/api/users/users.module';
 import { EpisodesModule } from 'src/api/episodes/episodes.module';
 // import { ConfigModule } from 'src/config/config.module';
+import { MailPostController } from './mailpost/mailpost.controller';
+import { MailpostService } from './mailpost/mailpost.service';
+import { EmailModule } from 'src/utils/email/email.module';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: 'Post', schema: PostSchema }]),
     UsersModule,
     EpisodesModule,
+    EmailModule,
     // ConfigModule,
   ],
   exports: [PostsService],
-  controllers: [],
-  providers: [PostsService, PostResolver, DateScalar, ObjectIdScalar],
+  controllers: [MailPostController],
+  providers: [
+    PostsService,
+    PostResolver,
+    DateScalar,
+    ObjectIdScalar,
+    MailpostService,
+  ],
 })
 export class PostsModule {}

@@ -1,5 +1,5 @@
 import { Schema, model, Model, Document, Query } from 'mongoose';
-import { normalizeEmail } from 'validator';
+import { normalizeEmail, isEmail as validateEmail } from 'validator';
 import * as bcrypt from 'bcrypt';
 import { User } from 'src/graphql.classes';
 
@@ -8,10 +8,15 @@ export interface UserDocument extends User, Document {
   password: string;
   normalizedUsername: string;
   normalizedEmail: string;
-  passwordReset?: {
-    token: string;
-    expiration: Date;
-  };
+  isVerified: boolean;
+  // passwordReset?: {
+  //   token: string;
+  //   expiration: Date;
+  // };
+  // signUp?: {
+  //   token: string;
+  //   expiration: Date;
+  // };
 
   /**
    * Checks if the user's password provided matches the user's password hash
@@ -34,15 +39,24 @@ export interface IUserModel extends Model<UserDocument> {
   validateEmail(email: string): boolean;
 }
 
-export const PasswordResetSchema: Schema = new Schema({
-  token: { type: String, required: true },
-  expiration: { type: Date, required: true },
-});
+// export const PasswordResetTokenSchema: Schema = new Schema({
+//   token: { type: String, required: true },
+//   expiration: { type: Date, required: true },
+//   valid: { type: Date, required: true, default: Date.now, expires: '1h' },
+//   user: { type: Schema.Types.ObjectId, ref: 'User' },
+// });
 
-function validateEmail(email: string): boolean {
-  const expression = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-  return expression.test(email);
-}
+// export const SignupTokenSchema: Schema = new Schema({
+//   token: { type: String, required: true },
+//   expiration: { type: Date, required: true },
+//   valid: { type: Date, required: true, default: Date.now, expires: '1d' },
+//   user: { type: Schema.Types.ObjectId, ref: 'User' },
+// });
+
+// function validateEmail(email: string): boolean {
+//   const expression = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+//   return expression.test(email);
+// }
 
 export const UserSchema: Schema = new Schema(
   {
@@ -74,7 +88,8 @@ export const UserSchema: Schema = new Schema(
       unique: true,
     },
     isVerified: { type: Boolean, default: false },
-    passwordReset: PasswordResetSchema,
+    // passwordReset: PasswordResetTokenSchema,
+    // signUp: SignupTokenSchema,
     enabled: {
       type: Boolean,
       default: true,

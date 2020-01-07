@@ -12,18 +12,23 @@ import {
   ObjectId,
 } from 'src/graphql.classes';
 import { randomBytes } from 'crypto';
-import { createTransport, SendMailOptions } from 'nodemailer';
+// import { createTransport, SendMailOptions } from 'nodemailer';
 import { ConfigService } from 'src/config/config.service';
 import { MongoError } from 'mongodb';
 import { AuthService } from 'src/api/auth/auth.service';
 import { UserEventEmitter } from './users.events';
+import { EmailService } from 'src/utils/email/email.service';
+import { Token } from '../@types/declarations';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel('User') private readonly userModel: Model<UserDocument>,
+    @InjectModel('PasswordResetToken') private readonly passwordResetTokenModel,
+    @InjectModel('SignUpToken') private readonly signUpTokenModel,
     private configService: ConfigService,
     private authService: AuthService,
+    private emailService: EmailService,
     @InjectEventEmitter() private readonly emitter: UserEventEmitter,
   ) {}
 
@@ -143,7 +148,7 @@ export class UsersService {
 
     if (!user) return undefined;
 
-    this.emitter.emit('newOrUpdatedUser', user);
+    this.emitter.emit('updatedUser', user);
 
     return user;
   }
@@ -163,46 +168,22 @@ export class UsersService {
     if (!user) return false;
     if (!user.enabled) return false;
 
-    const token = randomBytes(32).toString('hex');
-
-    // One day for expiration of reset token
-    const expiration = new Date(Date().valueOf() + 24 * 60 * 60 * 1000);
-
-    const transporter = createTransport({
-      service: this.configService.emailService,
-      auth: {
-        user: this.configService.emailUsername,
-        pass: this.configService.emailPassword,
-      },
+    const createdToken = new this.passwordResetTokenModel({
+      token: randomBytes(32).toString('hex'),
+      user: user._id,
     });
 
-    const mailOptions: SendMailOptions = {
-      from: this.configService.emailFrom,
-      to: email,
-      subject: `Reset Password`,
-      text: `${user.username},
-      Replace this with a website that can pass the token:
-      ${token}`,
-    };
+    let pwResetToken: Token | undefined;
+    try {
+      pwResetToken = await createdToken.save();
+    } catch (error) {
+      throw this.evaluateMongoError(error, createdToken);
+    }
 
-    return new Promise(resolve => {
-      transporter.sendMail(mailOptions, (err: Error | null, info) => {
-        Logger.debug(info, UsersService.name);
-        if (err) {
-          resolve(false);
-          return;
-        }
-
-        user.passwordReset = {
-          token,
-          expiration,
-        };
-
-        user.save().then(
-          () => resolve(true),
-          () => resolve(false),
-        );
-      });
+    return await this.emailService.sendWithTemplate({
+      template: 'forgotPassword',
+      to: user.email,
+      variables: { token: pwResetToken.token, user },
     });
   }
 
@@ -221,10 +202,13 @@ export class UsersService {
     password: string,
   ): Promise<UserDocument | undefined> {
     const user = await this.findOneByUsername(username);
-    if (user && user.passwordReset && user.enabled !== false) {
-      if (user.passwordReset.token === code) {
+    const token = await this.passwordResetTokenModel
+      .findOne({ token: code })
+      .exec();
+    if (user && token && user.enabled !== false) {
+      if (token.token === code) {
         user.password = password;
-        user.passwordReset = undefined;
+        await this.passwordResetTokenModel.remove({ token: code });
         await user.save();
         return user;
       }
@@ -242,9 +226,9 @@ export class UsersService {
    */
   async create(createUserInput: CreateUserInput): Promise<UserDocument> {
     const createdUser = new this.userModel({
+      ...createUserInput,
       postTag: generateId(),
       saveForLaterId: generateId(),
-      ...createUserInput,
     });
 
     let user: UserDocument | undefined;
@@ -256,8 +240,39 @@ export class UsersService {
       throw this.evaluateMongoError(error, createUserInput);
     }
 
-    this.emitter.emit('newOrUpdatedUser', user);
+    const createdToken = new this.signUpTokenModel({
+      token: randomBytes(32).toString('hex'),
+      user: user._id,
+    });
 
+    let signupToken: Token | undefined;
+    try {
+      signupToken = await createdToken.save();
+    } catch (error) {
+      throw this.evaluateMongoError(error, createdToken);
+    }
+
+    Logger.debug('sending email confirmation', UsersService.name);
+    this.emailService.sendWithTemplate({
+      template: 'signupToken',
+      to: user,
+      variables: { user, token: signupToken.token },
+    });
+
+    this.emitter.emit('newUser', user);
+
+    return user;
+  }
+
+  async verifyEmail(code: string): Promise<UserDocument | undefined> {
+    const token = await this.signUpTokenModel.findOne({ token: code }).exec();
+    if (!token) throw new Error('Token expired');
+    const user = await this.findOneById(token.user);
+    if (!user || !user.enabled) throw new Error('No user found for that token');
+    if (user.isVerified) return user;
+    user.isVerified = true;
+    await user.save();
+    await this.signUpTokenModel.remove({ token: code });
     return user;
   }
 
@@ -272,6 +287,12 @@ export class UsersService {
     const user = await this.userModel
       .findOne({ normalizedEmail: normalizeEmail(email) })
       .exec();
+    if (user) return user;
+    return undefined;
+  }
+
+  async findOneByTag(postTag: string): Promise<UserDocument | undefined> {
+    const user = await this.userModel.findOne({ postTag }).exec();
     if (user) return user;
     return undefined;
   }

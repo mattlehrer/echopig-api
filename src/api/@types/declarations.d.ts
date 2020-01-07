@@ -10,3 +10,8 @@ export interface ObjectIdPair {
   _id: ObjectId;
   byUser: ObjectId;
 }
+
+export interface Token {
+  token: string;
+  user: ObjectId;
+}

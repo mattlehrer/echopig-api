@@ -9,6 +9,8 @@ import { NestEmitterModule } from 'nest-emitter';
 import { EventEmitter } from 'events';
 // import { AppService } from './app.service';
 // import { AppController } from './app.controller';
+import { UtilsModule } from './utils/utils.module';
+import { EmailModule } from './utils/email/email.module';
 
 @Module({
   imports: [
@@ -43,6 +45,8 @@ import { EventEmitter } from 'events';
     ConfigModule,
     ApiModule,
     NestEmitterModule.forRoot(new EventEmitter()),
+    UtilsModule,
+    EmailModule,
   ],
   // controllers: [AppController],
   // providers: [AppService],

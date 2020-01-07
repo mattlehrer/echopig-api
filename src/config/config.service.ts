@@ -21,10 +21,15 @@ export class ConfigService {
 
     const config = dotenv.parse(file);
     this.envConfig = this.validateInput(config);
+    this.envConfig.ENV = filePath
+      .split('/')
+      [filePath.split('/').length - 1].split('.')[0];
   }
 
   private validateInput(envConfig: EnvConfig): EnvConfig {
     const envVarsSchema: Joi.ObjectSchema = Joi.object({
+      ENV: Joi.string(),
+      BASE_URL: Joi.string().required(),
       MONGO_URI: Joi.string().required(),
       MONGO_AUTH_ENABLED: Joi.boolean().default(false),
       MONGO_USER: Joi.string().when('MONGO_AUTH_ENABLED', {
@@ -56,6 +61,10 @@ export class ConfigService {
         then: Joi.required(),
       }),
       TEST_EMAIL_TO: Joi.string(),
+      AWS_ACCESS_KEY_ID: Joi.string(),
+      AWS_SECRET_ACCESS_KEY: Joi.string(),
+      MAILGUN_API_KEY: Joi.string(),
+      MAILGUN_DOMAIN: Joi.string(),
     });
 
     const { error, value: validatedEnvConfig } = Joi.validate(
@@ -68,6 +77,10 @@ export class ConfigService {
       );
     }
     return validatedEnvConfig;
+  }
+
+  get env(): string {
+    return this.envConfig.ENV;
   }
 
   get jwtExpiresIn(): number | undefined {
@@ -91,6 +104,18 @@ export class ConfigService {
 
   get emailService(): string | undefined {
     return this.envConfig.EMAIL_SERVICE;
+  }
+
+  get mgApiKey(): string | undefined {
+    return this.envConfig.MAILGUN_API_KEY;
+  }
+
+  get mgDomain(): string | undefined {
+    return this.envConfig.MAILGUN_DOMAIN;
+  }
+
+  get baseUrl(): string | undefined {
+    return this.envConfig.BASE_URL;
   }
 
   get emailUsername(): string | undefined {
@@ -126,10 +151,10 @@ export class ConfigService {
   }
 
   get awsAccessKeyId(): string | undefined {
-    return String(this.envConfig.AWS_ACCESS_KEY_ID).valueOf();
+    return this.envConfig.AWS_ACCESS_KEY_ID;
   }
 
   get awsSecretAccessKey(): string | undefined {
-    return String(this.envConfig.AWS_SECRET_ACCESS_KEY).valueOf();
+    return this.envConfig.AWS_SECRET_ACCESS_KEY;
   }
 }
