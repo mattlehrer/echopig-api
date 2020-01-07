@@ -31,9 +31,15 @@ export class RssService implements OnModuleInit {
       // @TODO: implement Saves
       // await this.updateAndCacheFeed({ userId, publicFeed = false });
     });
-    this.userEventEmitter.on('newOrUpdatedUser', async user => {
+    this.userEventEmitter.on('newUser', async user => {
+      Logger.debug(`User event! New user ${user.username}`, RssService.name);
+      await this.updateAndCacheFeed({ user });
+      // @TODO: implement Saves
+      // await this.updateAndCacheFeed({ userId, publicFeed = false });
+    });
+    this.userEventEmitter.on('updatedUser', async user => {
       Logger.debug(
-        `User event! New or updated user ${user.username}`,
+        `User event! Updated user ${user.username}`,
         RssService.name,
       );
       await this.updateAndCacheFeed({ user });
@@ -140,10 +146,13 @@ export class RssService implements OnModuleInit {
     user: UserDocument;
     publicFeed?: boolean;
   }): Promise<string> {
-    if (!user.username)
+    if (!user.username) {
       throw new Error(
         `Can't create feed for ${user} because there is no username.`,
       );
+    }
+    // @TODO: if !user.enabled, delete feed file
+
     const xml = await this.generateFeed({ user, publicFeed });
 
     Logger.debug('writing file', RssService.name);
