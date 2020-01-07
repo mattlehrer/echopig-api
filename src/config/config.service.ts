@@ -63,6 +63,7 @@ export class ConfigService {
       TEST_EMAIL_TO: Joi.string(),
       AWS_ACCESS_KEY_ID: Joi.string(),
       AWS_SECRET_ACCESS_KEY: Joi.string(),
+      AWS_S3_BUCKET: Joi.string(),
       MAILGUN_API_KEY: Joi.string(),
       MAILGUN_DOMAIN: Joi.string(),
     });
@@ -156,5 +157,9 @@ export class ConfigService {
 
   get awsSecretAccessKey(): string | undefined {
     return this.envConfig.AWS_SECRET_ACCESS_KEY;
+  }
+
+  get s3Bucket(): string | undefined {
+    return this.envConfig.AWS_S3_BUCKET;
   }
 }
