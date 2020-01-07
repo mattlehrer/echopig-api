@@ -89,10 +89,6 @@ export class PostsService {
     if (!deletedCount) return undefined;
     Logger.log(`Deleted post: ${_id}`, PostsService.name);
 
-    Logger.debug(
-      'emitting feedNeedsUpdate from PostsService.delete',
-      PostsService.name,
-    );
     this.emitter.emit('feedNeedsUpdate', byUser);
 
     return _id;
