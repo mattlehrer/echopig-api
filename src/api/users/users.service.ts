@@ -12,7 +12,6 @@ import {
   ObjectId,
 } from 'src/graphql.classes';
 import { randomBytes } from 'crypto';
-// import { createTransport, SendMailOptions } from 'nodemailer';
 import { ConfigService } from 'src/config/config.service';
 import { MongoError } from 'mongodb';
 import { AuthService } from 'src/api/auth/auth.service';
