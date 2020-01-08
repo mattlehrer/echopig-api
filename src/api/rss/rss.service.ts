@@ -20,7 +20,7 @@ export class RssService implements OnModuleInit {
     @InjectEventEmitter() private readonly userEventEmitter: UserEventEmitter,
   ) {}
   onModuleInit() {
-    this.postEventEmitter.on('feedNeedsUpdate', async user => {
+    this.postEventEmitter.on('feedNeedsUpdate', async ({ user }) => {
       Logger.debug(
         `Posts event! Update feed for ${user.username}`,
         RssService.name,

@@ -1,10 +1,15 @@
 import { EventEmitter } from 'events';
 import { StrictEventEmitter } from 'nest-emitter';
-import { ObjectId } from 'src/graphql.classes';
+import { UserDocument } from '../users/schemas/user.schema';
 
 interface PostEvents {
   notification: string;
-  feedNeedsUpdate: (userId: ObjectId) => void;
+  feedNeedsUpdate: PostEventData;
+}
+
+interface PostEventData {
+  user: UserDocument;
+  event: string;
 }
 
 export type PostEventEmitter = StrictEventEmitter<EventEmitter, PostEvents>;

@@ -44,7 +44,10 @@ export class PostsService {
     } catch (error) {
       throw new MongoError(error);
     }
-    this.emitter.emit('feedNeedsUpdate', post.byUser);
+    this.emitter.emit('feedNeedsUpdate', {
+      user: post.byUser,
+      event: 'Create Post',
+    });
 
     return post;
   }
@@ -76,7 +79,10 @@ export class PostsService {
 
     if (!post) return undefined;
 
-    this.emitter.emit('feedNeedsUpdate', post.byUser);
+    this.emitter.emit('feedNeedsUpdate', {
+      user: post.byUser,
+      event: 'Update Post',
+    });
 
     return post;
   }
@@ -89,7 +95,10 @@ export class PostsService {
     if (!deletedCount) return undefined;
     Logger.log(`Deleted post: ${_id}`, PostsService.name);
 
-    this.emitter.emit('feedNeedsUpdate', byUser);
+    this.emitter.emit('feedNeedsUpdate', {
+      user: byUser,
+      event: 'Delete Post',
+    });
 
     return _id;
   }

@@ -70,6 +70,7 @@ export class ConfigService {
       TWITTER_CONSUMER_SECRET: Joi.string(),
       FACEBOOK_APP_ID: Joi.string(),
       FACEBOOK_APP_SECRET: Joi.string(),
+      SEGMENT_KEY: Joi.string(),
     });
 
     const { error, value: validatedEnvConfig } = Joi.validate(
@@ -181,5 +182,9 @@ export class ConfigService {
 
   get fbAppSecret(): string | undefined {
     return this.envConfig.FACEBOOK_APP_SECRET;
+  }
+
+  get segmentKey(): string | undefined {
+    return this.envConfig.SEGMENT_KEY;
   }
 }
