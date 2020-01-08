@@ -9,6 +9,7 @@ import { ConfigService } from 'src/config/config.service';
 import { ConfigModule } from 'src/config/config.module';
 import { LocalStrategy } from './strategies/local.strategy';
 import { TwitterStrategy } from './strategies/twitter.strategy';
+import { FacebookStrategy } from './strategies/facebook.strategy';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { TwitterStrategy } from './strategies/twitter.strategy';
     JwtStrategy,
     LocalStrategy,
     TwitterStrategy,
+    FacebookStrategy,
   ],
   exports: [AuthService],
 })

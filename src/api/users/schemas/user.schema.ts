@@ -14,6 +14,7 @@ export interface UserDocument extends User, Document {
       kind: string;
       accessToken?: string;
       tokenSecret?: string;
+      refreshToken?: string;
     },
   ];
   avatar?: string;

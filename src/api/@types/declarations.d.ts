@@ -19,7 +19,8 @@ export interface Token {
 interface SocialToken {
   kind: string;
   accessToken: string;
-  tokenSecret: string;
+  tokenSecret?: string;
+  refreshToken?: string;
 }
 export interface SocialUserInput {
   username: string;

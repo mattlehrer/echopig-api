@@ -88,6 +88,7 @@
     "@types/node-fetch": "^2.5.4",
     "@types/nodemailer": "^6.4.0",
     "@types/nodemailer-mailgun-transport": "^1.4.1",
+    "@types/passport-facebook": "^2.1.9",
     "@types/passport-jwt": "^3.0.3",
     "@types/passport-local": "^1.0.33",
     "@types/passport-twitter": "^1.0.34",

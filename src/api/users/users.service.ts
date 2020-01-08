@@ -299,8 +299,14 @@ export class UsersService {
     return undefined;
   }
 
-  async findOneByTwitterId(twId: string): Promise<UserDocument | undefined> {
-    const user = await this.userModel.findOne({ twitter: twId }).exec();
+  async findOneByTwitterId(id: string): Promise<UserDocument | undefined> {
+    const user = await this.userModel.findOne({ twitter: id }).exec();
+    if (user) return user;
+    return undefined;
+  }
+
+  async findOneByFbId(id: string): Promise<UserDocument | undefined> {
+    const user = await this.userModel.findOne({ facebook: id }).exec();
     if (user) return user;
     return undefined;
   }

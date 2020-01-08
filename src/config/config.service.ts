@@ -68,6 +68,8 @@ export class ConfigService {
       MAILGUN_DOMAIN: Joi.string(),
       TWITTER_CONSUMER_KEY: Joi.string(),
       TWITTER_CONSUMER_SECRET: Joi.string(),
+      FACEBOOK_APP_ID: Joi.string(),
+      FACEBOOK_APP_SECRET: Joi.string(),
     });
 
     const { error, value: validatedEnvConfig } = Joi.validate(
@@ -171,5 +173,13 @@ export class ConfigService {
 
   get twitterConsumerSecret(): string | undefined {
     return this.envConfig.TWITTER_CONSUMER_SECRET;
+  }
+
+  get fbAppId(): string | undefined {
+    return this.envConfig.FACEBOOK_APP_ID;
+  }
+
+  get fbAppSecret(): string | undefined {
+    return this.envConfig.FACEBOOK_APP_SECRET;
   }
 }
