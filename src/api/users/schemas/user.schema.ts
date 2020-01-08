@@ -9,6 +9,14 @@ export interface UserDocument extends User, Document {
   normalizedUsername: string;
   normalizedEmail: string;
   isVerified: boolean;
+  tokens?: [
+    {
+      kind: string;
+      accessToken?: string;
+      tokenSecret?: string;
+    },
+  ];
+  avatar?: string;
   // passwordReset?: {
   //   token: string;
   //   expiration: Date;

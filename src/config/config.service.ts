@@ -66,6 +66,8 @@ export class ConfigService {
       AWS_S3_BUCKET: Joi.string(),
       MAILGUN_API_KEY: Joi.string(),
       MAILGUN_DOMAIN: Joi.string(),
+      TWITTER_CONSUMER_KEY: Joi.string(),
+      TWITTER_CONSUMER_SECRET: Joi.string(),
     });
 
     const { error, value: validatedEnvConfig } = Joi.validate(
@@ -161,5 +163,13 @@ export class ConfigService {
 
   get s3Bucket(): string | undefined {
     return this.envConfig.AWS_S3_BUCKET;
+  }
+
+  get twitterConsumerKey(): string | undefined {
+    return this.envConfig.TWITTER_CONSUMER_KEY;
+  }
+
+  get twitterConsumerSecret(): string | undefined {
+    return this.envConfig.TWITTER_CONSUMER_SECRET;
   }
 }

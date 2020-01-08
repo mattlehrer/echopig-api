@@ -15,3 +15,17 @@ export interface Token {
   token: string;
   user: ObjectId;
 }
+
+interface SocialToken {
+  kind: string;
+  accessToken: string;
+  tokenSecret: string;
+}
+export interface SocialUserInput {
+  username: string;
+  email?: string;
+  twitter?: string;
+  tokens: SocialToken[];
+  name?: string;
+  avatar?: string;
+}

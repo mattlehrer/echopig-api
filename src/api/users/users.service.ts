@@ -18,7 +18,7 @@ import { MongoError } from 'mongodb';
 import { AuthService } from 'src/api/auth/auth.service';
 import { UserEventEmitter } from './users.events';
 import { EmailService } from 'src/utils/email/email.service';
-import { Token } from '../@types/declarations';
+import { Token, SocialUserInput } from '../@types/declarations';
 
 @Injectable()
 export class UsersService {
@@ -220,11 +220,13 @@ export class UsersService {
    * Creates a user
    *
    * @param {CreateUserInput} createUserInput username, email, and password. Username and email must be
-   * unique, will throw an email with a description if either are duplicates
+   * unique, will throw an error with a description if either are duplicates
    * @returns {Promise<UserDocument>} or throws an error
    * @memberof UsersService
    */
-  async create(createUserInput: CreateUserInput): Promise<UserDocument> {
+  async create(
+    createUserInput: CreateUserInput | SocialUserInput,
+  ): Promise<UserDocument> {
     const createdUser = new this.userModel({
       ...createUserInput,
       postTag: generateId(),
@@ -297,6 +299,12 @@ export class UsersService {
     return undefined;
   }
 
+  async findOneByTwitterId(twId: string): Promise<UserDocument | undefined> {
+    const user = await this.userModel.findOne({ twitter: twId }).exec();
+    if (user) return user;
+    return undefined;
+  }
+
   /**
    * Returns a user by their unique username or undefined
    *
@@ -353,7 +361,7 @@ export class UsersService {
    */
   private evaluateMongoError(
     error: MongoError,
-    createUserInput: CreateUserInput,
+    createUserInput: CreateUserInput | SocialUserInput,
   ): Error {
     if (error.code === 11000) {
       if (
