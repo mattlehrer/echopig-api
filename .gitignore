@@ -1,4 +1,5 @@
 *.env
+getstream.js
 
 # compiled output
 /dist

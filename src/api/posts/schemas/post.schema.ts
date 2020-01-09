@@ -2,6 +2,7 @@ import { Schema, Document, model } from 'mongoose';
 import { Post } from 'src/graphql.classes';
 import { isURL } from 'validator';
 import autopopulate = require('mongoose-autopopulate');
+import * as stream from 'getstream-node';
 
 function validateURL(url: string) {
   return isURL(url, {
@@ -52,6 +53,11 @@ const PostSchema: Schema = new Schema(
 );
 
 PostSchema.plugin(autopopulate);
+
+PostSchema.plugin(stream.mongoose.activity);
+PostSchema.methods.activityActorProp = function() {
+  return 'byUser';
+};
 
 const PostModel = model<PostDocument>('Post', PostSchema);
 

@@ -71,6 +71,9 @@ export class ConfigService {
       FACEBOOK_APP_ID: Joi.string(),
       FACEBOOK_APP_SECRET: Joi.string(),
       SEGMENT_KEY: Joi.string(),
+      STREAM_KEY: Joi.string(),
+      STREAM_SECRET: Joi.string(),
+      STREAM_APP_ID: Joi.string(),
     });
 
     const { error, value: validatedEnvConfig } = Joi.validate(
@@ -186,5 +189,17 @@ export class ConfigService {
 
   get segmentKey(): string | undefined {
     return this.envConfig.SEGMENT_KEY;
+  }
+
+  get streamKey(): string | undefined {
+    return this.envConfig.STREAM_KEY;
+  }
+
+  get streamSecret(): string | undefined {
+    return this.envConfig.STREAM_SECRET;
+  }
+
+  get streamAppId(): string | undefined {
+    return this.envConfig.STREAM_APP_ID;
   }
 }
