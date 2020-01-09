@@ -55,8 +55,29 @@ const PostSchema: Schema = new Schema(
 PostSchema.plugin(autopopulate);
 
 PostSchema.plugin(stream.mongoose.activity);
-PostSchema.methods.activityActorProp = function() {
-  return 'byUser';
+// PostSchema.methods.activityActorProp = function() {
+//   return 'byUser';
+// };
+PostSchema.methods.createActivity = function() {
+  // this is the default createActivity code, customize as you see fit.
+  const activity: any = {};
+  // const extraData = this.activityExtraData();
+  // for (const key in extraData) {
+  //   activity[key] = extraData[key];
+  // }
+  // activity.to = (this.activityNotify() || []).map(function(x) {
+  //   return x.id;
+  // });
+  activity.actor = this.byUser;
+  activity.verb = 'Post';
+  activity.object = 'Post:' + this.id;
+  // eslint-disable-next-line @typescript-eslint/camelcase
+  activity.foreign_id = 'Post:' + this.id;
+  activity.time = new Date().toISOString();
+  // if (this.activityTime()) {
+  //   activity.time = this.activityTime();
+  // }
+  return activity;
 };
 
 const PostModel = model<PostDocument>('Post', PostSchema);
