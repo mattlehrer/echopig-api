@@ -13,11 +13,9 @@ import { SignUpTokenSchema } from './schemas/signup-token.schema';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: 'User', schema: UserSchema }]),
     MongooseModule.forFeature([
+      { name: 'User', schema: UserSchema },
       { name: 'PasswordResetToken', schema: PasswordResetTokenSchema },
-    ]),
-    MongooseModule.forFeature([
       { name: 'SignUpToken', schema: SignUpTokenSchema },
     ]),
     ConfigModule,
