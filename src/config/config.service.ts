@@ -10,6 +10,7 @@ export interface EnvConfig {
 @Injectable()
 export class ConfigService {
   private readonly envConfig: EnvConfig;
+  private readonly environment: string;
 
   constructor(filePath: string) {
     let file: Buffer | undefined;
@@ -21,14 +22,11 @@ export class ConfigService {
 
     const config = dotenv.parse(file);
     this.envConfig = this.validateInput(config);
-    this.envConfig.ENV = filePath
-      .split('/')
-      [filePath.split('/').length - 1].split('.')[0];
+    this.environment = process.env.NODE_ENV || 'development';
   }
 
   private validateInput(envConfig: EnvConfig): EnvConfig {
     const envVarsSchema: Joi.ObjectSchema = Joi.object({
-      ENV: Joi.string(),
       BASE_URL: Joi.string().required(),
       MONGO_URI: Joi.string().required(),
       MONGO_AUTH_ENABLED: Joi.boolean().default(false),
@@ -74,6 +72,8 @@ export class ConfigService {
       STREAM_KEY: Joi.string(),
       STREAM_SECRET: Joi.string(),
       STREAM_APP_ID: Joi.string(),
+      ALGOLIA_APP_ID: Joi.string(),
+      ALGOLIA_API_KEY: Joi.string(),
     });
 
     const { error, value: validatedEnvConfig } = Joi.validate(
@@ -89,7 +89,7 @@ export class ConfigService {
   }
 
   get env(): string {
-    return this.envConfig.ENV;
+    return this.environment;
   }
 
   get jwtExpiresIn(): number | undefined {
@@ -201,5 +201,13 @@ export class ConfigService {
 
   get streamAppId(): string | undefined {
     return this.envConfig.STREAM_APP_ID;
+  }
+
+  get algoliaAppId(): string | undefined {
+    return this.envConfig.ALGOLIA_APP_ID;
+  }
+
+  get algoliaApiKey(): string | undefined {
+    return this.envConfig.ALGOLIA_API_KEY;
   }
 }

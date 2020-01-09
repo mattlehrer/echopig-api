@@ -1,7 +1,11 @@
 import { Schema, model, Model, Document, Query } from 'mongoose';
+import * as mongooseAlgolia from 'mongoose-algolia';
 import { normalizeEmail, isEmail as validateEmail } from 'validator';
 import * as bcrypt from 'bcrypt';
 import { User } from 'src/graphql.classes';
+import { ConfigService } from 'src/config/config.service';
+
+const configService = new ConfigService(`${process.env.NODE_ENV}.env`);
 
 export interface UserDocument extends User, Document {
   // Declaring everything that is not in the GraphQL Schema for a User
@@ -47,20 +51,6 @@ export interface IUserModel extends Model<UserDocument> {
    */
   validateEmail(email: string): boolean;
 }
-
-// export const PasswordResetTokenSchema: Schema = new Schema({
-//   token: { type: String, required: true },
-//   expiration: { type: Date, required: true },
-//   valid: { type: Date, required: true, default: Date.now, expires: '1h' },
-//   user: { type: Schema.Types.ObjectId, ref: 'User' },
-// });
-
-// export const SignupTokenSchema: Schema = new Schema({
-//   token: { type: String, required: true },
-//   expiration: { type: Date, required: true },
-//   valid: { type: Date, required: true, default: Date.now, expires: '1d' },
-//   user: { type: Schema.Types.ObjectId, ref: 'User' },
-// });
 
 // function validateEmail(email: string): boolean {
 //   const expression = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
@@ -217,6 +207,34 @@ UserSchema.methods.checkPassword = function(
 UserSchema.statics.validateEmail = function(email: string): boolean {
   return validateEmail(email);
 };
+
+UserSchema.plugin(mongooseAlgolia, {
+  appId: configService.algoliaAppId,
+  apiKey: configService.algoliaApiKey,
+  indexName: `${configService.env}_USER`, //The name of the index in Algolia, you can also pass in a function
+  selector: 'username name', //You can decide which field that are getting synced to Algolia (same as selector in mongoose)
+  // populate: {
+  //   path: 'podcast',
+  //   select: 'title -_id',
+  // },
+  // defaults: {
+  //   author: 'unknown',
+  // },
+  // mappings: {
+  //   title: function(value) {
+  //     return `Book: ${value}`;
+  //   },
+  // },
+  // virtuals: {
+  //   whatever: function(doc) {
+  //     return `Custom data ${doc.title}`;
+  //   },
+  // },
+  filter: function(doc: UserDocument) {
+    return doc.enabled;
+  },
+  debug: configService.env === 'development', // Default: false -> If true operations are logged out in your console
+});
 
 export const UserModel: IUserModel = model<UserDocument, IUserModel>(
   'User',
