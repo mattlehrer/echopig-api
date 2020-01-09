@@ -53,12 +53,19 @@ export class Episode {
   _id: ObjectId;
 }
 
+export class Follow {
+  user: ObjectId;
+  target: ObjectId;
+}
+
 export class LoginResult {
   user: User;
   token: string;
 }
 
 export abstract class IMutation {
+  abstract createFollow(target: ObjectId): Follow | Promise<Follow>;
+
   abstract createPost(createPostInput: CreatePostInput): Post | Promise<Post>;
 
   abstract updatePost(
@@ -127,6 +134,8 @@ export abstract class IQuery {
   abstract episodes(podcast?: ObjectId): Episode[] | Promise<Episode[]>;
 
   abstract episode(episodeId?: ObjectId): Episode | Promise<Episode>;
+
+  abstract follows(user?: ObjectId): Follow[] | Promise<Follow[]>;
 
   abstract podcast(podcastId?: ObjectId): Podcast | Promise<Podcast>;
 

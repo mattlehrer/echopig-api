@@ -1,0 +1,14 @@
+scalar ObjectId
+
+type Query {
+  follows(user: ObjectId): [Follow!]!
+}
+
+type Mutation {
+  createFollow(target: ObjectId!): Follow!
+}
+
+type Follow {
+  user: ObjectId!
+  target: ObjectId!
+}
