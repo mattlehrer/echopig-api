@@ -100,15 +100,8 @@ export const UserSchema: Schema = new Schema(
 
     name: String,
     postTag: { type: String, unique: true },
-    saveForLaterId: { type: String, unique: true },
+    saveTag: { type: String, unique: true, alias: 'saveForLaterId' },
     avatar: String,
-    // saves: [
-    //   {
-    //     type: Schema.Types.ObjectId,
-    //     ref: 'Save',
-    //     default: [],
-    //   },
-    // ],
     explicit: { type: Boolean, default: false },
 
     facebook: String,

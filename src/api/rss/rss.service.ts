@@ -78,7 +78,7 @@ export class RssService implements OnModuleInit {
       itunesAuthor: user.username,
       feedUrl: publicFeed
         ? `https://www.echopig.com/rss/${user.username}`
-        : `https://www.echopig.com/saved/${user.saveForLaterId}`,
+        : `https://www.echopig.com/saved/${user.saveTag}`,
       siteUrl: `https://www.echopig.com/u/${user.username}`,
       generator: 'Echopig.com',
       imageUrl: 'https://www.echopig.com/images/logo.png',

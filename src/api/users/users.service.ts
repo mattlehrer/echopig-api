@@ -229,7 +229,7 @@ export class UsersService {
     const createdUser = new this.userModel({
       ...createUserInput,
       postTag: generateId(),
-      saveForLaterId: generateId(),
+      saveTag: generateId(),
     });
 
     let user: UserDocument | undefined;

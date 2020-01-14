@@ -24,7 +24,7 @@ type User {
   normalizedEmail: String
   permissions: [String!]!
   postTag: String!
-  saveForLaterId: String!
+  saveTag: String!
   createdAt: Date!
   updatedAt: Date!
   lastSeenAt: Date!
