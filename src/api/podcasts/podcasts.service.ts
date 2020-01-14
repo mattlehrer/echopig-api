@@ -62,4 +62,14 @@ export class PodcastsService {
     }
     return podcast;
   }
+
+  async getAllPodcasts(): Promise<PodcastDocument[]> {
+    const podcasts = await this.podcastModel.find().exec();
+    return podcasts;
+  }
+
+  async getCategory(category: string): Promise<PodcastDocument[]> {
+    const podcasts = await this.podcastModel.find({ genres: category }).exec();
+    return podcasts;
+  }
 }

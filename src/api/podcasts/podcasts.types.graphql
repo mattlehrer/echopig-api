@@ -2,6 +2,7 @@ scalar Date
 scalar ObjectId
 
 type Query {
+  podcasts: [Podcast!]!
   podcast(podcastId: ObjectId): Podcast!
   genre(genre: String): [Podcast!]!
 }
