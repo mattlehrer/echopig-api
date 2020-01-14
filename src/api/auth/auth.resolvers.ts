@@ -1,4 +1,4 @@
-import { Resolver, Args, Query, Context } from '@nestjs/graphql';
+import { Resolver, Args, Query, Context, Mutation } from '@nestjs/graphql';
 import { LoginUserInput, LoginResult } from 'src/graphql.classes';
 import { AuthService } from './auth.service';
 import { AuthenticationError } from 'apollo-server-core';
@@ -11,7 +11,7 @@ import { RequestWithUser } from 'src/api/@types/declarations';
 export class AuthResolver {
   constructor(private authService: AuthService) {}
 
-  @Query('login')
+  @Mutation('login')
   async login(@Args('user') user: LoginUserInput): Promise<LoginResult> {
     const result = await this.authService.validateUserByPassword(user);
     if (result) return result;

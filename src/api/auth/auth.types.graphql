@@ -1,6 +1,9 @@
 type Query {
-  login(user: LoginUserInput!): LoginResult!
   refreshToken: String!
+}
+
+type Mutation {
+  login(user: LoginUserInput!): LoginResult!
 }
 
 type LoginResult {
