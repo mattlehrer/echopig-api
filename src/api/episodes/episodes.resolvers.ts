@@ -17,7 +17,7 @@ export class EpisodeResolver {
   }
 
   @Query('episode')
-  async getPost(
+  async getEpisode(
     @Args('episode') episodeId: ObjectId,
   ): Promise<EpisodeDocument> {
     const episode = await this.episodesService.getEpisode(episodeId);
