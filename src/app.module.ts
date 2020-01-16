@@ -23,6 +23,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
           useNewUrlParser: true,
           useCreateIndex: true,
           useUnifiedTopology: true,
+          useFindAndModify: false,
         };
 
         if (configService.mongoAuthEnabled) {
