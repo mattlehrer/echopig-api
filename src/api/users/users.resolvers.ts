@@ -81,6 +81,28 @@ export class UserResolver {
     return createdUser;
   }
 
+  @Mutation('resendConfirmEmail')
+  async resendConfirmEmail(@Args('email') email: string): Promise<User> {
+    let existingUser: User | undefined;
+    try {
+      existingUser = await this.usersService.resendConfirmEmail({ email });
+    } catch (error) {
+      throw new UserInputError(error.message);
+    }
+    return existingUser;
+  }
+
+  @Mutation('confirmEmail')
+  async confirmEmail(@Args('token') token: string): Promise<User> {
+    let user: User | undefined;
+    try {
+      user = await this.usersService.verifyEmail(token);
+    } catch (error) {
+      throw new UserInputError(error.message);
+    }
+    return user;
+  }
+
   @Mutation('updateUser')
   @AdminAllowedArgs(
     'username',

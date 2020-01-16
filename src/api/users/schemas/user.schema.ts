@@ -12,7 +12,6 @@ export interface UserDocument extends User, Document {
   password: string;
   normalizedUsername: string;
   normalizedEmail: string;
-  isVerified: boolean;
   tokens?: [
     {
       kind: string;
@@ -21,7 +20,6 @@ export interface UserDocument extends User, Document {
       refreshToken?: string;
     },
   ];
-  avatar?: string;
   // passwordReset?: {
   //   token: string;
   //   expiration: Date;
@@ -100,7 +98,7 @@ export const UserSchema: Schema = new Schema(
 
     name: String,
     postTag: { type: String, unique: true },
-    saveTag: { type: String, unique: true, alias: 'saveForLaterId' },
+    saveTag: { type: String, unique: true },
     avatar: String,
     explicit: { type: Boolean, default: false },
 

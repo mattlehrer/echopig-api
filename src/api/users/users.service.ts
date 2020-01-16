@@ -241,6 +241,23 @@ export class UsersService {
       throw this.evaluateMongoError(error, createUserInput);
     }
 
+    await this.resendConfirmEmail({ user });
+
+    this.emitter.emit('newUser', user);
+
+    return user;
+  }
+
+  async resendConfirmEmail({
+    email = null,
+    user = null,
+  }): Promise<UserDocument | undefined> {
+    if (email && !user) {
+      user = await this.userModel
+        .findOne({ normalizedEmail: normalizeEmail(email) })
+        .exec();
+    }
+    if (!user || !user.enabled) throw new Error('No user found for that email');
     const createdToken = new this.signUpTokenModel({
       token: randomBytes(32).toString('hex'),
       user: user._id,
@@ -259,8 +276,6 @@ export class UsersService {
       to: user,
       variables: { user, token: signupToken.token },
     });
-
-    this.emitter.emit('newUser', user);
 
     return user;
   }

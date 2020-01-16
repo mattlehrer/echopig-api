@@ -38,6 +38,7 @@ export class UpdateUserInput {
   email?: string;
   password?: UpdatePasswordInput;
   enabled?: boolean;
+  avatar?: string;
 }
 
 export class Episode {
@@ -64,6 +65,8 @@ export class LoginResult {
 }
 
 export abstract class IMutation {
+  abstract login(user: LoginUserInput): LoginResult | Promise<LoginResult>;
+
   abstract createFollow(target: ObjectId): Follow | Promise<Follow>;
 
   abstract createPost(createPostInput: CreatePostInput): Post | Promise<Post>;
@@ -76,6 +79,10 @@ export abstract class IMutation {
   abstract deletePost(postId: ObjectId): ObjectId | Promise<ObjectId>;
 
   abstract createUser(createUserInput?: CreateUserInput): User | Promise<User>;
+
+  abstract resendConfirmEmail(email?: string): User | Promise<User>;
+
+  abstract confirmEmail(token?: string): User | Promise<User>;
 
   abstract updateUser(
     fieldsToUpdate: UpdateUserInput,
@@ -127,8 +134,6 @@ export class Post {
 }
 
 export abstract class IQuery {
-  abstract login(user: LoginUserInput): LoginResult | Promise<LoginResult>;
-
   abstract refreshToken(): string | Promise<string>;
 
   abstract episodes(podcast?: ObjectId): Episode[] | Promise<Episode[]>;
@@ -136,6 +141,8 @@ export abstract class IQuery {
   abstract episode(episodeId?: ObjectId): Episode | Promise<Episode>;
 
   abstract follows(user?: ObjectId): Follow[] | Promise<Follow[]>;
+
+  abstract podcasts(): Podcast[] | Promise<Podcast[]>;
 
   abstract podcast(podcastId?: ObjectId): Podcast | Promise<Podcast>;
 
@@ -161,15 +168,17 @@ export class User {
   normalizedUsername?: string;
   email: string;
   name?: string;
+  avatar?: string;
   explicit?: boolean;
   normalizedEmail?: string;
   permissions: string[];
   postTag: string;
-  saveForLaterId: string;
+  saveTag: string;
   createdAt: Date;
   updatedAt: Date;
   lastSeenAt: Date;
   enabled: boolean;
+  isVerified: boolean;
   _id: ObjectId;
 }
 

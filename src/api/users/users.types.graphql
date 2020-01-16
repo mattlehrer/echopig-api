@@ -9,6 +9,8 @@ type Query {
 
 type Mutation {
   createUser(createUserInput: CreateUserInput): User!
+  resendConfirmEmail(email: String): User!
+  confirmEmail(token: String): User!
   updateUser(fieldsToUpdate: UpdateUserInput!, username: String): User!
   addAdminPermission(username: String!): User!
   removeAdminPermission(username: String!): User!
@@ -20,6 +22,7 @@ type User {
   normalizedUsername: String
   email: String!
   name: String
+  avatar: String
   explicit: Boolean
   normalizedEmail: String
   permissions: [String!]!
@@ -29,6 +32,7 @@ type User {
   updatedAt: Date!
   lastSeenAt: Date!
   enabled: Boolean!
+  isVerified: Boolean!
   _id: ObjectId!
 }
 
@@ -43,6 +47,7 @@ input UpdateUserInput {
   email: String
   password: UpdatePasswordInput
   enabled: Boolean
+  avatar: String
 }
 
 input UpdatePasswordInput {
