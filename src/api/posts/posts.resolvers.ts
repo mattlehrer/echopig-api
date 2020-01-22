@@ -115,7 +115,7 @@ export class PostResolver {
       since,
       maxEpisodes,
     );
-    if (!episodes) throw new Error('Could not get episodes');
+    if (!episodes) throw new Error('Could not get episodes for that genre');
     return episodes;
   }
 
