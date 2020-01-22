@@ -2,7 +2,7 @@ import { Schema, model, Model, Document, Query } from 'mongoose';
 import * as mongooseAlgolia from 'mongoose-algolia';
 import { normalizeEmail, isEmail as validateEmail } from 'validator';
 import * as bcrypt from 'bcrypt';
-import { User } from 'src/graphql.classes';
+import { User, SocialToken } from 'src/graphql.classes';
 import { ConfigService } from 'src/config/config.service';
 
 const configService = new ConfigService(`${process.env.NODE_ENV}.env`);
@@ -12,22 +12,7 @@ export interface UserDocument extends User, Document {
   password: string;
   normalizedUsername: string;
   normalizedEmail: string;
-  tokens?: [
-    {
-      kind: string;
-      accessToken?: string;
-      tokenSecret?: string;
-      refreshToken?: string;
-    },
-  ];
-  // passwordReset?: {
-  //   token: string;
-  //   expiration: Date;
-  // };
-  // signUp?: {
-  //   token: string;
-  //   expiration: Date;
-  // };
+  tokens?: SocialToken[];
 
   /**
    * Checks if the user's password provided matches the user's password hash
