@@ -214,6 +214,7 @@ export class PostsService {
         throw err;
       });
     return postCounts.map(e => {
+      e.episode.posts = e.count;
       return e.episode;
     });
   }
