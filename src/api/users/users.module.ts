@@ -10,6 +10,7 @@ import { ObjectIdScalar } from 'src/api/scalars/object-id.scalar';
 import { EmailModule } from 'src/utils/email/email.module';
 import { PasswordResetTokenSchema } from './schemas/password-reset-token.schema';
 import { SignUpTokenSchema } from './schemas/signup-token.schema';
+import { PostsModule } from '../posts/posts.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { SignUpTokenSchema } from './schemas/signup-token.schema';
     ]),
     ConfigModule,
     forwardRef(() => AuthModule),
+    forwardRef(() => PostsModule),
     EmailModule,
   ],
   exports: [UsersService],

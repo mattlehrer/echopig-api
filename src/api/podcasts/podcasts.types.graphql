@@ -3,8 +3,9 @@ scalar ObjectId
 
 type Query {
   podcasts: [Podcast!]!
-  podcast(podcastId: ObjectId): Podcast!
-  genre(genre: String): [Podcast!]!
+  podcastById(podcastId: ObjectId!): Podcast
+  podcast(iTunesId: Int!): Podcast
+  genre(genre: String): [Podcast!]
 }
 
 type Podcast {
@@ -27,4 +28,6 @@ type Podcast {
   listenNotesID: String
   appURLs: [String]
   _id: ObjectId!
+  posts: Int
+  episodes: [Episode]
 }

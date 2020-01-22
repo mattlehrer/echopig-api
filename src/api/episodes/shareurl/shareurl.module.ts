@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { ShareurlService } from './shareurl.service';
 import { OvercastService } from './overcast/overcast.service';
 import { ApplePodcastsService } from './applepodcasts/applepodcasts.service';
@@ -8,7 +8,7 @@ import { StitcherService } from './stitcher/stitcher.service';
 import { PodcastsModule } from 'src/api/podcasts/podcasts.module';
 
 @Module({
-  imports: [PodcastsModule],
+  imports: [forwardRef(() => PodcastsModule)],
   providers: [
     ShareurlService,
     OvercastService,

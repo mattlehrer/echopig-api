@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { PostsService } from './posts.service';
 import { PostSchema } from './schemas/post.schema';
@@ -15,7 +15,7 @@ import { EmailModule } from 'src/utils/email/email.module';
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: 'Post', schema: PostSchema }]),
-    UsersModule,
+    forwardRef(() => UsersModule),
     EpisodesModule,
     EmailModule,
     // ConfigModule,

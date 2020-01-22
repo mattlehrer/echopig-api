@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { InjectEventEmitter } from 'nest-emitter';
@@ -18,9 +18,12 @@ import { AuthService } from 'src/api/auth/auth.service';
 import { UserEventEmitter } from './users.events';
 import { EmailService } from 'src/utils/email/email.service';
 import { Token, SocialUserInput } from '../@types/declarations';
+import { PostsService } from '../posts/posts.service';
+import { ModuleRef } from '@nestjs/core';
 
 @Injectable()
-export class UsersService {
+export class UsersService implements OnModuleInit {
+  private postsService: PostsService;
   constructor(
     @InjectModel('User') private readonly userModel: Model<UserDocument>,
     @InjectModel('PasswordResetToken') private readonly passwordResetTokenModel,
@@ -28,8 +31,14 @@ export class UsersService {
     private configService: ConfigService,
     private authService: AuthService,
     private emailService: EmailService,
+    private readonly moduleRef: ModuleRef,
     @InjectEventEmitter() private readonly emitter: UserEventEmitter,
   ) {}
+  onModuleInit() {
+    this.postsService = this.moduleRef.get(PostsService, {
+      strict: false,
+    });
+  }
 
   /**
    * Returns if the user has 'admin' set on the permissions array
@@ -110,9 +119,22 @@ export class UsersService {
     }
 
     if (fieldsToUpdate.email) {
+      Logger.debug('checking email', UsersService.name);
       const duplicateUser = await this.findOneByEmail(fieldsToUpdate.email);
       const emailValid = UserModel.validateEmail(fieldsToUpdate.email);
       if (duplicateUser || !emailValid) fieldsToUpdate.email = undefined;
+    }
+
+    if (fieldsToUpdate.token) {
+      const user = await this.findOneByUsername(username);
+      if (!user) return undefined;
+      if (user.tokens && user.tokens.length) {
+        user.tokens = [...new Set([...user.tokens, fieldsToUpdate.token])];
+      } else {
+        user.tokens = [fieldsToUpdate.token];
+      }
+      await user.save();
+      delete fieldsToUpdate.token;
     }
 
     const fields: {
@@ -308,19 +330,25 @@ export class UsersService {
   }
 
   async findOneByTag(postTag: string): Promise<UserDocument | undefined> {
-    const user = await this.userModel.findOne({ postTag }).exec();
+    const user = await this.userModel
+      .findOne({ postTag, enabled: true })
+      .exec();
     if (user) return user;
     return undefined;
   }
 
   async findOneByTwitterId(id: string): Promise<UserDocument | undefined> {
-    const user = await this.userModel.findOne({ twitter: id }).exec();
+    const user = await this.userModel
+      .findOne({ twitter: id, enabled: true })
+      .exec();
     if (user) return user;
     return undefined;
   }
 
   async findOneByFbId(id: string): Promise<UserDocument | undefined> {
-    const user = await this.userModel.findOne({ facebook: id }).exec();
+    const user = await this.userModel
+      .findOne({ facebook: id, enabled: true })
+      .exec();
     if (user) return user;
     return undefined;
   }
@@ -337,6 +365,22 @@ export class UsersService {
       .findOne({ normalizedUsername: username.toLowerCase() })
       .exec();
     if (user) return user;
+    return undefined;
+  }
+
+  async getProfile(username: string): Promise<UserDocument | undefined> {
+    const user = await this.userModel
+      .findOne(
+        { normalizedUsername: username.toLowerCase(), enabled: true },
+        'username name avatar createdAt',
+      )
+      .exec();
+    Logger.debug(user);
+    if (user) {
+      const posts = await this.postsService.getAllPostsByUser(user._id);
+      user.posts = posts;
+      return user;
+    }
     return undefined;
   }
 

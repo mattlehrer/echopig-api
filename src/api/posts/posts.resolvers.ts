@@ -12,6 +12,8 @@ import {
 import { PostDocument } from './schemas/post.schema';
 import { JwtAuthGuard } from 'src/api/auth/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/api/decorators/current-user';
+import { EpisodeDocument } from '../episodes/schemas/episode.schema';
+import { PodcastDocument } from '../podcasts/schemas/podcast.schema';
 
 @Resolver('Post')
 export class PostResolver {
@@ -87,5 +89,46 @@ export class PostResolver {
     }
     if (!post) throw new UserInputError('The post does not exist');
     return post;
+  }
+
+  @Query('mostPostedEpisodesInTimeframe')
+  async getMostPostedEpisodesInTimeframe(
+    @Args('since') since: Date,
+    @Args('maxEpisodes') maxEpisodes: number,
+  ): Promise<EpisodeDocument[]> {
+    const episodes = await this.postsService.getMostPostedEpisodesInTimeframe(
+      since,
+      maxEpisodes,
+    );
+    if (!episodes) throw new Error('Could not get episodes');
+    return episodes;
+  }
+
+  @Query('mostPostedEpisodesInGenreInTimeframe')
+  async getMostPostedEpisodesInGenreInTimeframe(
+    @Args('genre') genre: string,
+    @Args('since') since: Date,
+    @Args('maxEpisodes') maxEpisodes: number,
+  ): Promise<EpisodeDocument[]> {
+    const episodes = await this.postsService.getMostPostedEpisodesInGenreInTimeframe(
+      genre,
+      since,
+      maxEpisodes,
+    );
+    if (!episodes) throw new Error('Could not get episodes');
+    return episodes;
+  }
+
+  @Query('mostPostedPodcastsInTimeframe')
+  async getMostPostedPodcastsInTimeframe(
+    @Args('since') since: Date,
+    @Args('maxPodcasts') maxPodcasts: number,
+  ): Promise<PodcastDocument[]> {
+    const podcasts = await this.postsService.getMostPostedPodcastsInTimeframe(
+      since,
+      maxPodcasts,
+    );
+    if (!podcasts) throw new Error('Could not get podcasts');
+    return podcasts;
   }
 }

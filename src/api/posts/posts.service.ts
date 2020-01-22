@@ -14,6 +14,7 @@ import {
 import { EpisodeDocument } from 'src/api/episodes/schemas/episode.schema';
 import { ObjectIdPair } from 'src/api/@types/declarations';
 import { PostEventEmitter } from './posts.events';
+import { PodcastDocument } from '../podcasts/schemas/podcast.schema';
 
 @Injectable()
 export class PostsService {
@@ -34,7 +35,9 @@ export class PostsService {
     const previousPosts = await this.getAllPostsByUser(createPostInput.byUser);
 
     if (this.isRepostOfEpisodeInTimeframe(previousPosts, episode)) {
-      throw new Error('User has previously posted this episode');
+      throw new Error(
+        `You have posted ${episode.title} recently and can add it to your feed again next week.`,
+      );
     }
     let post: PostDocument | undefined;
     try {
@@ -88,12 +91,15 @@ export class PostsService {
   }
 
   async delete({ _id, byUser }: ObjectIdPair): Promise<ObjectId> {
-    const { deletedCount } = await this.postModel.deleteOne({
-      _id,
-      byUser: byUser._id,
-    });
-    if (!deletedCount) return undefined;
-    Logger.log(`Deleted post: ${_id}`, PostsService.name);
+    const post = await this.postModel.findOneAndUpdate(
+      {
+        _id,
+        byUser: byUser._id,
+      },
+      { enabled: false },
+    );
+    if (!post) return undefined;
+    Logger.log(`Disabled post: ${_id}`, PostsService.name);
 
     this.emitter.emit('feedNeedsUpdate', {
       user: byUser,
@@ -104,19 +110,19 @@ export class PostsService {
   }
 
   async getAllPostsByUser(byUser: ObjectId): Promise<PostDocument[]> {
-    return await this.postModel.find({ byUser }, null, {
-      sort: { updatedAt: -1 },
+    return await this.postModel.find({ byUser, enabled: true }, null, {
+      sort: { createdAt: -1 },
     });
   }
 
   async getPost(postId: ObjectId): Promise<PostDocument | null> {
-    return await this.postModel.findById(postId);
+    return await this.postModel.findOne({ _id: postId, enabled: true });
   }
 
   private isRepostOfEpisodeInTimeframe(
     posts: PostDocument[],
     episode: EpisodeDocument,
-    timeframe = 7 * 24 * 60 * 60 * 1000,
+    timeframe = 7 * 24 * 60 * 60 * 1000, // 7 day default
   ): boolean {
     for (const post of posts) {
       if (
@@ -127,5 +133,126 @@ export class PostsService {
       }
     }
     return false;
+  }
+
+  async getMostPostedEpisodesInTimeframe(
+    since: Date = new Date(2018, 0),
+    maxEpisodes = 50,
+  ): Promise<EpisodeDocument[]> {
+    const postCounts = await this.postModel
+      .aggregate([
+        { $match: { enabled: true, createdAt: { $gte: since } } },
+        { $sortByCount: '$episode' },
+        { $limit: maxEpisodes },
+        {
+          $lookup: {
+            from: 'episodes',
+            localField: '_id',
+            foreignField: '_id',
+            as: 'episode',
+          },
+        },
+        { $unwind: '$episode' },
+        {
+          $lookup: {
+            from: 'podcasts',
+            localField: 'episode.podcast',
+            foreignField: '_id',
+            as: 'episode.podcast',
+          },
+        },
+        { $unwind: '$episode.podcast' },
+      ])
+      .exec()
+      .catch(err => {
+        throw err;
+      });
+    return postCounts.map(e => {
+      e.episode.posts = e.count;
+      return e.episode;
+    });
+  }
+
+  async getMostPostedEpisodesInGenreInTimeframe(
+    genre: string,
+    since: Date = new Date(2018, 0),
+    maxEpisodes = 50,
+  ): Promise<EpisodeDocument[]> {
+    const postCounts = await this.postModel
+      .aggregate([
+        { $match: { enabled: true, createdAt: { $gte: since } } },
+        { $sortByCount: '$episode' },
+        {
+          $lookup: {
+            from: 'episodes',
+            localField: '_id',
+            foreignField: '_id',
+            as: 'episode',
+          },
+        },
+        { $unwind: '$episode' },
+        {
+          $lookup: {
+            from: 'podcasts',
+            localField: 'episode.podcast',
+            foreignField: '_id',
+            as: 'episode.podcast',
+          },
+        },
+        { $unwind: '$episode.podcast' },
+        { $unwind: '$episode.podcast.genres' },
+        // do a case insensitive search for genre
+        {
+          $match: {
+            'episode.podcast.genres': { $regex: `^${genre}$`, $options: 'i' },
+          },
+        },
+        { $limit: maxEpisodes },
+      ])
+      .exec()
+      .catch(err => {
+        throw err;
+      });
+    return postCounts.map(e => {
+      return e.episode;
+    });
+  }
+
+  async getMostPostedPodcastsInTimeframe(
+    since: Date = new Date(2018, 0),
+    maxPodcasts = 50,
+  ): Promise<PodcastDocument[]> {
+    const postCounts = await this.postModel
+      .aggregate([
+        { $match: { enabled: true, createdAt: { $gte: since } } },
+        {
+          $lookup: {
+            from: 'episodes',
+            localField: 'episode',
+            foreignField: '_id',
+            as: 'episode',
+          },
+        },
+        { $unwind: '$episode' },
+        {
+          $lookup: {
+            from: 'podcasts',
+            localField: 'episode.podcast',
+            foreignField: '_id',
+            as: 'episode.podcast',
+          },
+        },
+        { $unwind: '$episode.podcast' },
+        { $sortByCount: '$episode.podcast' },
+        { $limit: maxPodcasts },
+      ])
+      .exec()
+      .catch(err => {
+        throw err;
+      });
+    return postCounts.map(p => {
+      p._id.posts = p.count;
+      return p._id;
+    });
   }
 }

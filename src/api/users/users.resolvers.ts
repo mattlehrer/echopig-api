@@ -7,6 +7,7 @@ import {
   User,
   UpdateUserInput,
   UpdatePasswordInput,
+  ObjectId,
 } from 'src/graphql.classes';
 import { UsernameEmailAdminGuard } from 'src/api/auth/guards/username-email-admin.guard';
 import { AdminGuard } from 'src/api/auth/guards/admin.guard';
@@ -25,20 +26,37 @@ export class UserResolver {
     return await this.usersService.getAllUsers();
   }
 
-  @Query('user')
+  @Query('me')
   @UseGuards(JwtAuthGuard, UsernameEmailAdminGuard)
-  async user(
+  async me(
     @Args('username') username?: string,
     @Args('email') email?: string,
+    @Args('userId') userId?: ObjectId,
   ): Promise<User> {
     let user: User | undefined;
     if (username) {
       user = await this.usersService.findOneByUsername(username);
     } else if (email) {
       user = await this.usersService.findOneByEmail(email);
+    } else if (email) {
+      user = await this.usersService.findOneById(userId);
     } else {
       // Is this the best exception for a graphQL error?
       throw new ValidationError('A username or email must be included');
+    }
+
+    if (user) return user;
+    throw new UserInputError('The user does not exist');
+  }
+
+  @Query('user')
+  async user(@Args('username') username: string): Promise<User> {
+    let user: User | undefined;
+    if (username) {
+      user = await this.usersService.getProfile(username);
+    } else {
+      // Is this the best exception for a graphQL error?
+      throw new ValidationError('A username must be included');
     }
 
     if (user) return user;
@@ -112,7 +130,6 @@ export class UserResolver {
   )
   @UseGuards(JwtAuthGuard, UsernameEmailAdminGuard)
   async updateUser(
-    @Args('username') username: string,
     @Args('fieldsToUpdate')
     fieldsToUpdate: UpdateUserInput & {
       [fieldName: string]: boolean | string | UpdatePasswordInput;
@@ -120,7 +137,13 @@ export class UserResolver {
     @Context('req') request: RequestWithUser,
   ): Promise<User> {
     let user: UserDocument | undefined;
-    if (!username && request.user) username = request.user.username;
+    let username: string;
+    if (request.user) {
+      username = request.user.username;
+    } else {
+      throw new ValidationError('Could not verify requesting user.');
+    }
+    Logger.debug(username);
     try {
       user = await this.usersService.update(username, fieldsToUpdate);
     } catch (error) {

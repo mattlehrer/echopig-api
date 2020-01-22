@@ -23,6 +23,13 @@ export class LoginUserInput {
   password: string;
 }
 
+export class SocialToken {
+  kind: string;
+  accessToken?: string;
+  tokenSecret?: string;
+  refreshToken?: string;
+}
+
 export class UpdatePasswordInput {
   oldPassword: string;
   newPassword: string;
@@ -39,6 +46,9 @@ export class UpdateUserInput {
   password?: UpdatePasswordInput;
   enabled?: boolean;
   avatar?: string;
+  token?: SocialToken;
+  facebook?: string;
+  twitter?: string;
 }
 
 export class Episode {
@@ -52,6 +62,7 @@ export class Episode {
   shareURLs?: string[];
   parentalRating?: string;
   _id: ObjectId;
+  posts?: number;
 }
 
 export class Follow {
@@ -84,10 +95,7 @@ export abstract class IMutation {
 
   abstract confirmEmail(token?: string): User | Promise<User>;
 
-  abstract updateUser(
-    fieldsToUpdate: UpdateUserInput,
-    username?: string,
-  ): User | Promise<User>;
+  abstract updateUser(fieldsToUpdate: UpdateUserInput): User | Promise<User>;
 
   abstract addAdminPermission(username: string): User | Promise<User>;
 
@@ -120,13 +128,15 @@ export class Podcast {
   listenNotesID?: string;
   appURLs?: string[];
   _id: ObjectId;
+  posts?: number;
+  episodes?: Episode[];
 }
 
 export class Post {
   byUser: ObjectId;
   shareURL: string;
   comment?: string;
-  episode: ObjectId;
+  episode?: ObjectId;
   createdAt: Date;
   updatedAt?: Date;
   enabled: boolean;
@@ -144,7 +154,9 @@ export abstract class IQuery {
 
   abstract podcasts(): Podcast[] | Promise<Podcast[]>;
 
-  abstract podcast(podcastId?: ObjectId): Podcast | Promise<Podcast>;
+  abstract podcastById(podcastId: ObjectId): Podcast | Promise<Podcast>;
+
+  abstract podcast(iTunesId: number): Podcast | Promise<Podcast>;
 
   abstract genre(genre?: string): Podcast[] | Promise<Podcast[]>;
 
@@ -152,9 +164,27 @@ export abstract class IQuery {
 
   abstract post(post: ObjectId): Post | Promise<Post>;
 
+  abstract mostPostedEpisodesInTimeframe(
+    since?: Date,
+    maxEpisodes?: number,
+  ): Episode[] | Promise<Episode[]>;
+
+  abstract mostPostedEpisodesInGenreInTimeframe(
+    genre: string,
+    since?: Date,
+    maxEpisodes?: number,
+  ): Episode[] | Promise<Episode[]>;
+
+  abstract mostPostedPodcastsInTimeframe(
+    since?: Date,
+    maxPodcasts?: number,
+  ): Podcast[] | Promise<Podcast[]>;
+
   abstract users(): User[] | Promise<User[]>;
 
-  abstract user(
+  abstract user(username?: string): User | Promise<User>;
+
+  abstract me(
     username?: string,
     email?: string,
     userId?: ObjectId,
@@ -179,7 +209,10 @@ export class User {
   lastSeenAt: Date;
   enabled: boolean;
   isVerified: boolean;
+  facebook?: string;
+  twitter?: string;
   _id: ObjectId;
+  posts?: Post[];
 }
 
 export type ObjectId = any;

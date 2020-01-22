@@ -3,7 +3,8 @@ scalar ObjectId
 
 type Query {
   users: [User!]!
-  user(username: String, email: String, userId: ObjectId): User!
+  user(username: String): User!
+  me(username: String, email: String, userId: ObjectId): User!
   forgotPassword(email: String): Boolean
 }
 
@@ -11,7 +12,7 @@ type Mutation {
   createUser(createUserInput: CreateUserInput): User!
   resendConfirmEmail(email: String): User!
   confirmEmail(token: String): User!
-  updateUser(fieldsToUpdate: UpdateUserInput!, username: String): User!
+  updateUser(fieldsToUpdate: UpdateUserInput!): User!
   addAdminPermission(username: String!): User!
   removeAdminPermission(username: String!): User!
   resetPassword(username: String!, code: String!, password: String!): User!
@@ -33,7 +34,10 @@ type User {
   lastSeenAt: Date!
   enabled: Boolean!
   isVerified: Boolean!
+  facebook: String
+  twitter: String
   _id: ObjectId!
+  posts: [Post]
 }
 
 input CreateUserInput {
@@ -48,9 +52,19 @@ input UpdateUserInput {
   password: UpdatePasswordInput
   enabled: Boolean
   avatar: String
+  token: SocialToken
+  facebook: String
+  twitter: String
 }
 
 input UpdatePasswordInput {
   oldPassword: String!
   newPassword: String!
+}
+
+input SocialToken {
+  kind: String!
+  accessToken: String
+  tokenSecret: String
+  refreshToken: String
 }

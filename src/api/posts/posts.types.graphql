@@ -4,6 +4,13 @@ scalar ObjectId
 type Query {
   posts(byUser: ObjectId!): [Post!]!
   post(post: ObjectId!): Post!
+  mostPostedEpisodesInTimeframe(since: Date, maxEpisodes: Int): [Episode!]!
+  mostPostedEpisodesInGenreInTimeframe(
+    genre: String!
+    since: Date
+    maxEpisodes: Int
+  ): [Episode!]!
+  mostPostedPodcastsInTimeframe(since: Date, maxPodcasts: Int): [Podcast!]!
 }
 
 type Mutation {
@@ -16,7 +23,7 @@ type Post {
   byUser: ObjectId!
   shareURL: String!
   comment: String
-  episode: ObjectId!
+  episode: ObjectId
   createdAt: Date!
   updatedAt: Date
   enabled: Boolean!

@@ -1,17 +1,27 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { MongoError } from 'mongodb';
 // import * as searchitunes from 'searchitunes';
 import searchitunes = require('searchitunes');
 import { PodcastDocument } from './schemas/podcast.schema';
+import { ObjectId } from 'src/graphql.classes';
+import { EpisodesService } from '../episodes/episodes.service';
+import { ModuleRef } from '@nestjs/core';
 
 @Injectable()
-export class PodcastsService {
+export class PodcastsService implements OnModuleInit {
+  private episodesService: EpisodesService;
   constructor(
     @InjectModel('Podcast')
     private readonly podcastModel: Model<PodcastDocument>,
+    private readonly moduleRef: ModuleRef,
   ) {}
+  onModuleInit() {
+    this.episodesService = this.moduleRef.get(EpisodesService, {
+      strict: false,
+    });
+  }
 
   async findOrCreateByItunesId(iTunesID: number): Promise<PodcastDocument> {
     let podcast: PodcastDocument | null = await this.podcastModel.findOne({
@@ -60,6 +70,24 @@ export class PodcastsService {
         throw new MongoError(error);
       }
     }
+    return podcast;
+  }
+
+  async getPodcastByITunesId(iTunesID: number): Promise<PodcastDocument> {
+    const podcast = await this.podcastModel.findOne({ iTunesID }).exec();
+    const episodes = await this.episodesService.getAllEpisodesOfPodcast(
+      podcast._id,
+    );
+    podcast.episodes = episodes;
+    return podcast;
+  }
+
+  async getPodcastById(podcastId: ObjectId): Promise<PodcastDocument> {
+    const podcast = await this.podcastModel.findById(podcastId).exec();
+    const episodes = await this.episodesService.getAllEpisodesOfPodcast(
+      podcast._id,
+    );
+    podcast.episodes = episodes;
     return podcast;
   }
 
