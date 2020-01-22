@@ -49,6 +49,7 @@ input CreateUserInput {
 input UpdateUserInput {
   username: String
   email: String
+  name: String
   password: UpdatePasswordInput
   enabled: Boolean
   avatar: String

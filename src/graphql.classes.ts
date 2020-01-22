@@ -43,6 +43,7 @@ export class UpdatePostInput {
 export class UpdateUserInput {
   username?: string;
   email?: string;
+  name?: string;
   password?: UpdatePasswordInput;
   enabled?: boolean;
   avatar?: string;
