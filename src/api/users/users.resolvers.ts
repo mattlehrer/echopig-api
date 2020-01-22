@@ -143,7 +143,6 @@ export class UserResolver {
     } else {
       throw new ValidationError('Could not verify requesting user.');
     }
-    Logger.debug(username);
     try {
       user = await this.usersService.update(username, fieldsToUpdate);
     } catch (error) {
