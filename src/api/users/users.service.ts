@@ -119,7 +119,6 @@ export class UsersService implements OnModuleInit {
     }
 
     if (fieldsToUpdate.email) {
-      Logger.debug('checking email', UsersService.name);
       const duplicateUser = await this.findOneByEmail(fieldsToUpdate.email);
       const emailValid = UserModel.validateEmail(fieldsToUpdate.email);
       if (duplicateUser || !emailValid) fieldsToUpdate.email = undefined;
