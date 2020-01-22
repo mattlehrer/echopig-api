@@ -32,7 +32,14 @@ export class FacebookStrategy extends PassportStrategy(Strategy) {
         );
         throw new AuthenticationError(err.message);
       }
-      if (existingUser) return existingUser;
+      if (existingUser) {
+        Logger.log(
+          `Logged in as: ${req.user.username} - Received Twitter account: ${profile} registered to different user: ${existingUser.username}`,
+        );
+        return new Error(
+          'There is already a Twitter account that belongs to you. Sign in with that account or delete it, then link it with your current account.',
+        );
+      }
       let user: UserDocument;
       try {
         user = await this.usersService.findOneById(req.user.id);
