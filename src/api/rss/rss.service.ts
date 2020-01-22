@@ -110,7 +110,7 @@ export class RssService implements OnModuleInit {
             ? item.episode.podcast.author
             : '',
           enclosure: { url: item.episode.mp3URL },
-          date: item.updatedAt,
+          date: item.createdAt,
           itunesAuthor: item.episode.podcast.author
             ? item.episode.podcast.author
             : '',
