@@ -48,11 +48,11 @@ export class EpisodesService {
   }
 
   async getAllEpisodesOfPodcast(podcast: ObjectId): Promise<EpisodeDocument[]> {
-    return await this.episodeModel.find({ podcast });
+    return await this.episodeModel.find({ podcast }, '-podcast');
   }
 
   async getEpisode(episodeId: ObjectId): Promise<EpisodeDocument | undefined> {
-    const episode = await this.episodeModel.findById(episodeId);
+    const episode = await this.episodeModel.findOne({ _id: episodeId });
     if (!episode) return undefined;
     return episode;
   }

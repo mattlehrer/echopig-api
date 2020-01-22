@@ -17,4 +17,5 @@ type Episode {
   shareURLs: [String]
   parentalRating: String
   _id: ObjectId!
+  posts: Int
 }

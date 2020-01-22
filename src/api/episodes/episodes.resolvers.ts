@@ -18,7 +18,7 @@ export class EpisodeResolver {
 
   @Query('episode')
   async getEpisode(
-    @Args('episode') episodeId: ObjectId,
+    @Args('episodeId') episodeId: ObjectId,
   ): Promise<EpisodeDocument> {
     const episode = await this.episodesService.getEpisode(episodeId);
     if (!episode) throw new Error('Episode does not exist');
