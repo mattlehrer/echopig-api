@@ -1,13 +1,14 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthService } from './auth.service';
 import { getModelToken } from '@nestjs/mongoose';
-import { UserModel } from '../users/schemas/user.schema';
-import { UsersService } from '../users/users.service';
+import { UserModel } from 'src/api/users/schemas/user.schema';
+import { UsersService } from 'src/api/users/users.service';
 import { JwtModule } from '@nestjs/jwt';
-import { ConfigService } from '../../config/config.service';
-import { ConfigModule } from '../../config/config.module';
+import { ConfigService } from 'src/config/config.service';
+import { ConfigModule } from 'src/config/config.module';
 
-jest.mock('../users/users.service');
+jest.mock('src/api/users/users.service');
+jest.mock('src/config/config.service');
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -34,10 +35,10 @@ describe('AuthService', () => {
           useValue: UserModel,
         },
         ConfigService,
-        {
-          provide: ConfigService,
-          useValue: new ConfigService(`${process.env.NODE_ENV}.env`),
-        },
+        // {
+        //   provide: ConfigService,
+        //   useValue: new ConfigService(`${process.env.NODE_ENV}.env`),
+        // },
       ],
     }).compile();
 

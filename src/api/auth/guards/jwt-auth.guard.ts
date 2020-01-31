@@ -1,4 +1,4 @@
-import { Injectable, ExecutionContext } from '@nestjs/common';
+import { Injectable, ExecutionContext, Logger } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { AuthenticationError } from 'apollo-server-core';
@@ -13,7 +13,9 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     return request;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handleRequest(err: any, user: any, info: any) {
+    if (info) Logger.debug(`info: ${info}`, JwtAuthGuard.name);
     if (err || !user) {
       throw err || new AuthenticationError('Could not authenticate with token');
     }

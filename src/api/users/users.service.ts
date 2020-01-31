@@ -1,21 +1,49 @@
-import { Injectable } from '@nestjs/common';
+/* eslint-disable @typescript-eslint/camelcase */
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
+import { InjectEventEmitter } from 'nest-emitter';
+import { normalizeEmail } from 'validator';
+import { generate as generateId } from 'shortid';
 import { UserDocument, UserModel } from './schemas/user.schema';
-import { CreateUserInput, UpdateUserInput } from '../../graphql.classes';
+import {
+  CreateUserInput,
+  CreateSocialUserInput,
+  UpdateUserInput,
+  UpdatePasswordInput,
+  ObjectId,
+  LoginResult,
+} from 'src/graphql.classes';
 import { randomBytes } from 'crypto';
-import { createTransport, SendMailOptions } from 'nodemailer';
-import { ConfigService } from '../../config/config.service';
+import { ConfigService } from 'src/config/config.service';
 import { MongoError } from 'mongodb';
-import { AuthService } from '../auth/auth.service';
+import { AuthService } from 'src/api/auth/auth.service';
+import { UserEventEmitter } from './users.events';
+import { EmailService } from 'src/utils/email/email.service';
+import { Token } from '../@types/declarations';
+import { PostsService } from '../posts/posts.service';
+import { ModuleRef } from '@nestjs/core';
+import { getFbProfile } from '../../utils/facebook.login';
+import { getTwitterProfile } from '../../utils/twitter.login';
 
 @Injectable()
-export class UsersService {
+export class UsersService implements OnModuleInit {
+  private postsService: PostsService;
   constructor(
     @InjectModel('User') private readonly userModel: Model<UserDocument>,
+    @InjectModel('PasswordResetToken') private readonly passwordResetTokenModel,
+    @InjectModel('SignUpToken') private readonly signUpTokenModel,
     private configService: ConfigService,
     private authService: AuthService,
+    private emailService: EmailService,
+    private readonly moduleRef: ModuleRef,
+    @InjectEventEmitter() private readonly emitter: UserEventEmitter,
   ) {}
+  onModuleInit() {
+    this.postsService = this.moduleRef.get(PostsService, {
+      strict: false,
+    });
+  }
 
   /**
    * Returns if the user has 'admin' set on the permissions array
@@ -84,7 +112,9 @@ export class UsersService {
    */
   async update(
     username: string,
-    fieldsToUpdate: UpdateUserInput,
+    fieldsToUpdate: UpdateUserInput & {
+      [fieldName: string]: boolean | string | UpdatePasswordInput;
+    },
   ): Promise<UserDocument | undefined> {
     if (fieldsToUpdate.username) {
       const duplicateUser = await this.findOneByUsername(
@@ -99,7 +129,21 @@ export class UsersService {
       if (duplicateUser || !emailValid) fieldsToUpdate.email = undefined;
     }
 
-    const fields: any = {};
+    if (fieldsToUpdate.token) {
+      const user = await this.findOneByUsername(username);
+      if (!user) return undefined;
+      if (user.tokens && user.tokens.length) {
+        user.tokens = [...new Set([...user.tokens, fieldsToUpdate.token])];
+      } else {
+        user.tokens = [fieldsToUpdate.token];
+      }
+      await user.save();
+      delete fieldsToUpdate.token;
+    }
+
+    const fields: {
+      [fieldName: string]: boolean | string | UpdatePasswordInput;
+    } = {};
 
     if (fieldsToUpdate.password) {
       if (
@@ -122,12 +166,14 @@ export class UsersService {
     let user: UserDocument | null = null;
 
     user = await this.userModel.findOneAndUpdate(
-      { lowercaseUsername: username.toLowerCase() },
+      { normalizedUsername: username.toLowerCase() },
       fields,
       { new: true, runValidators: true },
     );
 
     if (!user) return undefined;
+
+    this.emitter.emit('updatedUser', user);
 
     return user;
   }
@@ -147,45 +193,22 @@ export class UsersService {
     if (!user) return false;
     if (!user.enabled) return false;
 
-    const token = randomBytes(32).toString('hex');
-
-    // One day for expiration of reset token
-    const expiration = new Date(Date().valueOf() + 24 * 60 * 60 * 1000);
-
-    const transporter = createTransport({
-      service: this.configService.emailService,
-      auth: {
-        user: this.configService.emailUsername,
-        pass: this.configService.emailPassword,
-      },
+    const createdToken = new this.passwordResetTokenModel({
+      token: randomBytes(32).toString('hex'),
+      user: user._id,
     });
 
-    const mailOptions: SendMailOptions = {
-      from: this.configService.emailFrom,
-      to: email,
-      subject: `Reset Password`,
-      text: `${user.username},
-      Replace this with a website that can pass the token:
-      ${token}`,
-    };
+    let pwResetToken: Token | undefined;
+    try {
+      pwResetToken = await createdToken.save();
+    } catch (error) {
+      throw this.evaluateMongoError(error, createdToken);
+    }
 
-    return new Promise(resolve => {
-      transporter.sendMail(mailOptions, (err, info) => {
-        if (err) {
-          resolve(false);
-          return;
-        }
-
-        user.passwordReset = {
-          token,
-          expiration,
-        };
-
-        user.save().then(
-          () => resolve(true),
-          () => resolve(false),
-        );
-      });
+    return await this.emailService.sendWithTemplate({
+      template: 'forgotPassword',
+      to: user.email,
+      variables: { token: pwResetToken.token, user },
     });
   }
 
@@ -204,10 +227,13 @@ export class UsersService {
     password: string,
   ): Promise<UserDocument | undefined> {
     const user = await this.findOneByUsername(username);
-    if (user && user.passwordReset && user.enabled !== false) {
-      if (user.passwordReset.token === code) {
+    const token = await this.passwordResetTokenModel
+      .findOne({ token: code })
+      .exec();
+    if (user && token && user.enabled !== false) {
+      if (token.token === code) {
         user.password = password;
-        user.passwordReset = undefined;
+        await this.passwordResetTokenModel.remove({ token: code });
         await user.save();
         return user;
       }
@@ -219,19 +245,116 @@ export class UsersService {
    * Creates a user
    *
    * @param {CreateUserInput} createUserInput username, email, and password. Username and email must be
-   * unique, will throw an email with a description if either are duplicates
+   * unique, will throw an error with a description if either are duplicates
    * @returns {Promise<UserDocument>} or throws an error
    * @memberof UsersService
    */
-  async create(createUserInput: CreateUserInput): Promise<UserDocument> {
-    const createdUser = new this.userModel(createUserInput);
+  async create(
+    createUserInput: CreateUserInput | CreateSocialUserInput,
+  ): Promise<UserDocument> {
+    const createdUser = new this.userModel({
+      ...createUserInput,
+      postTag: generateId(),
+      saveTag: generateId(),
+    });
 
     let user: UserDocument | undefined;
     try {
       user = await createdUser.save();
+      Logger.log('Created new user:', UsersService.name);
+      Logger.log(user, UsersService.name);
     } catch (error) {
       throw this.evaluateMongoError(error, createUserInput);
     }
+
+    await this.resendConfirmEmail({ user });
+
+    this.emitter.emit('newUser', user);
+
+    return user;
+  }
+
+  async createSocial(
+    createSocialUserInput: CreateSocialUserInput,
+  ): Promise<UserDocument> {
+    const { username, tokens } = createSocialUserInput;
+    if (createSocialUserInput.facebook) {
+      if (!(await this.authService.isValidFbToken(tokens[0].accessToken))) {
+        Logger.debug('Invalid token', 'createSocial');
+        return undefined;
+      }
+
+      return await this.findOrCreateOneByFbId({
+        id: createSocialUserInput.facebook,
+        token: tokens[0].accessToken,
+        username,
+      });
+    } else {
+      return await this.findOrCreateOneByTwitterId({
+        tokens,
+        username,
+      });
+    }
+    return undefined;
+  }
+
+  async createSocialUserAndLogin(
+    createSocialUserInput: CreateSocialUserInput,
+  ): Promise<LoginResult | undefined> {
+    const user = await this.createSocial(createSocialUserInput);
+    if (!user) return undefined;
+    const token = this.authService.createJwt(user).token;
+    const result: LoginResult = {
+      user,
+      token,
+    };
+    user.lastSeenAt = new Date();
+    user.save();
+    return result;
+  }
+
+  async resendConfirmEmail({
+    email = null,
+    user = null,
+  }): Promise<UserDocument | undefined> {
+    if (email && !user) {
+      user = await this.userModel
+        .findOne({ normalizedEmail: normalizeEmail(email) })
+        .exec();
+    }
+    if (!user || !user.enabled) throw new Error('No user found for that email');
+    const createdToken = new this.signUpTokenModel({
+      token: randomBytes(32).toString('hex'),
+      user: user._id,
+    });
+
+    let signupToken: Token | undefined;
+    try {
+      signupToken = await createdToken.save();
+    } catch (error) {
+      throw this.evaluateMongoError(error, createdToken);
+    }
+
+    Logger.debug('sending email confirmation', UsersService.name);
+    this.emailService.sendWithTemplate({
+      template: 'signupToken',
+      to: user,
+      variables: { user, token: signupToken.token },
+    });
+
+    return user;
+  }
+
+  async verifyEmail(code: string): Promise<UserDocument | undefined> {
+    Logger.debug(code, 'verifyEmail');
+    const token = await this.signUpTokenModel.findOne({ token: code }).exec();
+    if (!token) throw new Error('Token expired');
+    const user = await this.findOneById(token.user);
+    if (!user || !user.enabled) throw new Error('No user found for that token');
+    if (user.isVerified) return user;
+    user.isVerified = true;
+    await user.save();
+    await this.signUpTokenModel.deleteOne({ token: code });
     return user;
   }
 
@@ -244,10 +367,145 @@ export class UsersService {
    */
   async findOneByEmail(email: string): Promise<UserDocument | undefined> {
     const user = await this.userModel
-      .findOne({ lowercaseEmail: email.toLowerCase() })
+      .findOne({ normalizedEmail: normalizeEmail(email) })
       .exec();
     if (user) return user;
     return undefined;
+  }
+
+  async findOneByTag(postTag: string): Promise<UserDocument | undefined> {
+    const user = await this.userModel
+      .findOne({ postTag, enabled: true })
+      .exec();
+    if (user) return user;
+    return undefined;
+  }
+
+  async findOneByTwitterId(id: string): Promise<UserDocument | undefined> {
+    const user = await this.userModel
+      .findOne({ twitter: id, enabled: true })
+      .exec();
+    if (user) return user;
+    return undefined;
+  }
+
+  async findOrCreateOneByTwitterId({
+    tokens,
+    username,
+  }): Promise<UserDocument | undefined> {
+    Logger.debug('checking twitter profile', 'findOrCreateOneByTwitterId');
+    Logger.debug(tokens, 'findOrCreateOneByTwitterId');
+    const oauth = {
+      consumer_key: this.configService.twitterConsumerKey,
+      consumer_secret: this.configService.twitterConsumerSecret,
+      token: tokens[0].accessToken,
+      token_secret: tokens[0].tokenSecret,
+    };
+    const profile = await getTwitterProfile(oauth);
+    const user = await this.findOneByTwitterId(profile.id);
+    if (user) return user;
+
+    // Logger.debug(profile, 'findOrCreateOneByTwitterId');
+    let existingUser: UserDocument;
+    if (profile.email) {
+      try {
+        existingUser = await this.findOneByEmail(profile.email);
+      } catch (err) {
+        throw err;
+      }
+    }
+
+    if (existingUser) {
+      existingUser.set({
+        twitter: profile.id,
+        name: existingUser.name ? existingUser.name : profile.name,
+        avatar: existingUser.avatar ? existingUser.avatar : profile.avatar,
+      });
+      existingUser.tokens.push({
+        kind: 'twitter',
+        accessToken: tokens.oauthToken,
+        tokenSecret: tokens.oauthTokenSecret,
+      });
+      try {
+        await existingUser.save();
+        return existingUser;
+      } catch (err) {
+        throw err;
+      }
+    }
+
+    const newUser: CreateSocialUserInput = {
+      username,
+      email: profile.email,
+      twitter: profile.id,
+      tokens: [
+        {
+          kind: 'twitter',
+          accessToken: tokens.oauthToken,
+          tokenSecret: tokens.oauthTokenSecret,
+        },
+      ],
+      name: profile.name,
+      avatar: profile.avatar,
+    };
+
+    return await this.create(newUser);
+  }
+
+  async findOneByFbId(facebook): Promise<UserDocument | undefined> {
+    const user = await this.userModel
+      .findOne({ facebook, enabled: true })
+      .exec();
+    if (user) return user;
+    return undefined;
+  }
+
+  async findOrCreateOneByFbId({
+    id,
+    token,
+    username,
+  }): Promise<UserDocument | undefined> {
+    const user = await this.findOneByFbId(id);
+    if (user) return user;
+
+    // grab user info from graph api
+    Logger.debug('checking fb profile', 'findOrCreateOneByFbId');
+    const profile = await getFbProfile(id, token);
+    Logger.debug(profile, 'findOrCreateOneByFbId');
+    let existingUser: UserDocument;
+    if (profile.email) {
+      try {
+        existingUser = await this.findOneByEmail(profile.email);
+      } catch (err) {
+        throw err;
+      }
+    }
+
+    if (existingUser) {
+      existingUser.set({
+        facebook: id,
+        name: existingUser.name ? existingUser.name : profile.name,
+        avatar: existingUser.avatar ? existingUser.avatar : profile.avatar,
+      });
+      existingUser.tokens.push({ kind: 'facebook', accessToken: token });
+      try {
+        await existingUser.save();
+        return existingUser;
+      } catch (err) {
+        throw err;
+      }
+    }
+
+    const newUser: CreateSocialUserInput = {
+      username,
+      email: profile.email,
+      facebook: id,
+      tokens: [{ kind: 'facebook', accessToken: token }],
+      name: profile.name,
+      avatar: profile.avatar,
+    };
+
+    return await this.create(newUser);
   }
 
   /**
@@ -259,8 +517,30 @@ export class UsersService {
    */
   async findOneByUsername(username: string): Promise<UserDocument | undefined> {
     const user = await this.userModel
-      .findOne({ lowercaseUsername: username.toLowerCase() })
+      .findOne({ normalizedUsername: username.toLowerCase() })
       .exec();
+    if (user) return user;
+    return undefined;
+  }
+
+  async getProfile(username: string): Promise<UserDocument | undefined> {
+    const user = await this.userModel
+      .findOne(
+        { normalizedUsername: username.toLowerCase(), enabled: true },
+        'username name avatar createdAt',
+      )
+      .exec();
+    Logger.debug(user);
+    if (user) {
+      const posts = await this.postsService.getAllPostsByUser(user._id);
+      user.posts = posts;
+      return user;
+    }
+    return undefined;
+  }
+
+  async findOneById(userId: ObjectId): Promise<UserDocument | undefined> {
+    const user = await this.userModel.findById(userId).exec();
     if (user) return user;
     return undefined;
   }
@@ -286,6 +566,8 @@ export class UsersService {
     await this.userModel.deleteMany({});
   }
 
+  // @TODO: disable User account and disable all posts
+
   /**
    * Reads a mongo database error and attempts to provide a better error message. If
    * it is unable to produce a better error message, returns the original error message.
@@ -298,13 +580,13 @@ export class UsersService {
    */
   private evaluateMongoError(
     error: MongoError,
-    createUserInput: CreateUserInput,
+    createUserInput: CreateUserInput | CreateSocialUserInput,
   ): Error {
     if (error.code === 11000) {
       if (
         error.message
           .toLowerCase()
-          .includes(createUserInput.email.toLowerCase())
+          .includes(normalizeEmail(createUserInput.email) as string)
       ) {
         throw new Error(
           `e-mail ${createUserInput.email} is already registered`,

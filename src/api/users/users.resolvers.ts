@@ -1,13 +1,22 @@
-import { UseGuards } from '@nestjs/common';
+import { UseGuards, Logger } from '@nestjs/common';
 import { Args, Mutation, Query, Resolver, Context } from '@nestjs/graphql';
 import { UsersService } from './users.service';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { CreateUserInput, User, UpdateUserInput } from '../../graphql.classes';
-import { UsernameEmailAdminGuard } from '../auth/guards/username-email-admin.guard';
-import { AdminGuard } from '../auth/guards/admin.guard';
+import { JwtAuthGuard } from 'src/api/auth/guards/jwt-auth.guard';
+import {
+  CreateUserInput,
+  CreateSocialUserInput,
+  User,
+  UpdateUserInput,
+  UpdatePasswordInput,
+  ObjectId,
+  LoginResult,
+} from 'src/graphql.classes';
+import { UsernameEmailAdminGuard } from 'src/api/auth/guards/username-email-admin.guard';
+import { AdminGuard } from 'src/api/auth/guards/admin.guard';
 import { UserInputError, ValidationError } from 'apollo-server-core';
 import { UserDocument } from './schemas/user.schema';
-import { AdminAllowedArgs } from '../decorators/admin-allowed-args';
+import { AdminAllowedArgs } from 'src/api/decorators/admin-allowed-args';
+import { RequestWithUser } from 'src/api/@types/declarations';
 
 @Resolver('User')
 export class UserResolver {
@@ -19,20 +28,37 @@ export class UserResolver {
     return await this.usersService.getAllUsers();
   }
 
-  @Query('user')
+  @Query('me')
   @UseGuards(JwtAuthGuard, UsernameEmailAdminGuard)
-  async user(
+  async me(
     @Args('username') username?: string,
     @Args('email') email?: string,
+    @Args('userId') userId?: ObjectId,
   ): Promise<User> {
     let user: User | undefined;
     if (username) {
       user = await this.usersService.findOneByUsername(username);
     } else if (email) {
       user = await this.usersService.findOneByEmail(email);
+    } else if (email) {
+      user = await this.usersService.findOneById(userId);
     } else {
       // Is this the best exception for a graphQL error?
       throw new ValidationError('A username or email must be included');
+    }
+
+    if (user) return user;
+    throw new UserInputError('The user does not exist');
+  }
+
+  @Query('user')
+  async user(@Args('username') username: string): Promise<User> {
+    let user: User | undefined;
+    if (username) {
+      user = await this.usersService.getProfile(username);
+    } else {
+      // Is this the best exception for a graphQL error?
+      throw new ValidationError('A username must be included');
     }
 
     if (user) return user;
@@ -43,6 +69,7 @@ export class UserResolver {
   @Query('forgotPassword')
   async forgotPassword(@Args('email') email: string): Promise<void> {
     const worked = await this.usersService.forgotPassword(email);
+    Logger.debug(worked, UsersService.name);
   }
 
   // What went wrong is intentionally not sent (wrong username or code or user not in reset status)
@@ -63,7 +90,8 @@ export class UserResolver {
 
   @Mutation('createUser')
   async createUser(
-    @Args('createUserInput') createUserInput: CreateUserInput,
+    @Args('createUserInput')
+    createUserInput: CreateUserInput,
   ): Promise<User> {
     let createdUser: User | undefined;
     try {
@@ -72,6 +100,44 @@ export class UserResolver {
       throw new UserInputError(error.message);
     }
     return createdUser;
+  }
+
+  @Mutation('createSocialUser')
+  async createSocialUser(
+    @Args('createSocialUserInput')
+    createSocialUserInput: CreateSocialUserInput,
+  ): Promise<LoginResult> {
+    let result: LoginResult | undefined;
+    try {
+      result = await this.usersService.createSocialUserAndLogin(
+        createSocialUserInput,
+      );
+    } catch (error) {
+      throw new UserInputError(error.message);
+    }
+    return result;
+  }
+
+  @Mutation('resendConfirmEmail')
+  async resendConfirmEmail(@Args('email') email: string): Promise<User> {
+    let existingUser: User | undefined;
+    try {
+      existingUser = await this.usersService.resendConfirmEmail({ email });
+    } catch (error) {
+      throw new UserInputError(error.message);
+    }
+    return existingUser;
+  }
+
+  @Mutation('confirmEmail')
+  async confirmEmail(@Args('token') token: string): Promise<User> {
+    let user: User | undefined;
+    try {
+      user = await this.usersService.verifyEmail(token);
+    } catch (error) {
+      throw new UserInputError(error.message);
+    }
+    return user;
   }
 
   @Mutation('updateUser')
@@ -83,12 +149,19 @@ export class UserResolver {
   )
   @UseGuards(JwtAuthGuard, UsernameEmailAdminGuard)
   async updateUser(
-    @Args('username') username: string,
-    @Args('fieldsToUpdate') fieldsToUpdate: UpdateUserInput,
-    @Context('req') request: any,
+    @Args('fieldsToUpdate')
+    fieldsToUpdate: UpdateUserInput & {
+      [fieldName: string]: boolean | string | UpdatePasswordInput;
+    },
+    @Context('req') request: RequestWithUser,
   ): Promise<User> {
     let user: UserDocument | undefined;
-    if (!username && request.user) username = request.user.username;
+    let username: string;
+    if (request.user) {
+      username = request.user.username;
+    } else {
+      throw new ValidationError('Could not verify requesting user.');
+    }
     try {
       user = await this.usersService.update(username, fieldsToUpdate);
     } catch (error) {

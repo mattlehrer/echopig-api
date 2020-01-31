@@ -1,7 +1,7 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
-import { User } from '../../../graphql.classes';
-import { UsersService } from '../../users/users.service';
+import { User } from 'src/graphql.classes';
+import { UsersService } from 'src/api/users/users.service';
 import { AuthenticationError } from 'apollo-server-core';
 import { Reflector } from '@nestjs/core';
 
@@ -15,6 +15,7 @@ export class UsernameEmailAdminGuard implements CanActivate {
   ) {}
 
   // Returns an array of all the properties of an object seperated by a .
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getPropertiesArray(object: any): string[] {
     let result: string[] = [];
     Object.entries(object).forEach(([key, value]) => {

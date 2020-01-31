@@ -1,6 +1,11 @@
 type Query {
-  login(user: LoginUserInput!): LoginResult!
   refreshToken: String!
+}
+
+type Mutation {
+  login(user: LoginUserInput!): LoginResult!
+  fbLogin(fbIdAndToken: FbLoginInput!): LoginResult!
+  twitterLogin(twitterTokens: TwitterTokens!): LoginResult!
 }
 
 type LoginResult {
@@ -12,4 +17,14 @@ input LoginUserInput {
   username: String
   email: String
   password: String!
+}
+
+input FbLoginInput {
+  id: String!
+  accessToken: String!
+}
+
+input TwitterTokens {
+  oauthToken: String!
+  oauthTokenSecret: String!
 }

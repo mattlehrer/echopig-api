@@ -1,10 +1,14 @@
-import { Injectable, forwardRef, Inject } from '@nestjs/common';
+/* eslint-disable @typescript-eslint/camelcase */
+import { Injectable, forwardRef, Inject, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from '../users/users.service';
+import * as isEmail from 'validator/lib/isEmail';
+import { UsersService } from 'src/api/users/users.service';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
-import { LoginUserInput, User, LoginResult } from '../../graphql.classes';
-import { UserDocument } from '../users/schemas/user.schema';
-import { ConfigService } from '../../config/config.service';
+import { LoginUserInput, User, LoginResult } from 'src/graphql.classes';
+import { UserDocument } from 'src/api/users/schemas/user.schema';
+import { ConfigService } from 'src/config/config.service';
+import { isValidFbToken } from '../../utils/facebook.login';
+import { getTwitterProfile } from '../../utils/twitter.login';
 
 @Injectable()
 export class AuthService {
@@ -33,9 +37,16 @@ export class AuthService {
         loginAttempt.email,
       );
     } else if (loginAttempt.username) {
-      userToAttempt = await this.usersService.findOneByUsername(
-        loginAttempt.username,
-      );
+      if (isEmail(loginAttempt.username)) {
+        Logger.debug(loginAttempt.username, 'isEmail');
+        userToAttempt = await this.usersService.findOneByEmail(
+          loginAttempt.username,
+        );
+      } else {
+        userToAttempt = await this.usersService.findOneByUsername(
+          loginAttempt.username,
+        );
+      }
     }
 
     // If the user is not enabled, disable log in - the token wouldn't work anyways
@@ -54,6 +65,60 @@ export class AuthService {
 
     if (isMatch) {
       // If there is a successful match, generate a JWT for the user
+      const token = this.createJwt(userToAttempt).token;
+      const result: LoginResult = {
+        user: userToAttempt,
+        token,
+      };
+      userToAttempt.lastSeenAt = new Date();
+      userToAttempt.save();
+      return result;
+    }
+
+    return undefined;
+  }
+
+  async validateUserByFbAccessToken(
+    id: string,
+    accessToken: string,
+  ): Promise<LoginResult | undefined> {
+    if (this.isValidFbToken(accessToken)) {
+      const userToAttempt = await this.usersService.findOneByFbId(id);
+      if (!userToAttempt) return undefined;
+      const token = this.createJwt(userToAttempt).token;
+      const result: LoginResult = {
+        user: userToAttempt,
+        token,
+      };
+      userToAttempt.lastSeenAt = new Date();
+      userToAttempt.save();
+      return result;
+    }
+
+    return undefined;
+  }
+
+  async validateUserByTwitterTokens(
+    oauthToken: string,
+    oauthTokenSecret: string,
+  ): Promise<LoginResult | undefined> {
+    const oauth = {
+      consumer_key: this.configService.twitterConsumerKey,
+      consumer_secret: this.configService.twitterConsumerSecret,
+      token: oauthToken,
+      token_secret: oauthTokenSecret,
+    };
+    const twitterProfile = await getTwitterProfile(oauth);
+    if (twitterProfile && twitterProfile.id) {
+      let userToAttempt = await this.usersService.findOneByTwitterId(
+        twitterProfile.id,
+      );
+      if (twitterProfile.email) {
+        userToAttempt = await this.usersService.findOneByEmail(
+          twitterProfile.email,
+        );
+      }
+      if (!userToAttempt) return undefined;
       const token = this.createJwt(userToAttempt).token;
       const result: LoginResult = {
         user: userToAttempt,
@@ -118,5 +183,13 @@ export class AuthService {
       data,
       token: jwt,
     };
+  }
+
+  async isValidFbToken(token) {
+    return await isValidFbToken(
+      token,
+      this.configService.fbAppToken,
+      this.configService.fbAppId,
+    );
   }
 }

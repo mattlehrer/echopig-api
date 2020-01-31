@@ -1,8 +1,8 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
-import { Observable } from 'rxjs';
+// import { Observable } from 'rxjs';
 import { GqlExecutionContext } from '@nestjs/graphql';
-import { User } from '../../../graphql.classes';
-import { UsersService } from '../../users/users.service';
+import { User } from 'src/graphql.classes';
+import { UsersService } from 'src/api/users/users.service';
 import { AuthenticationError } from 'apollo-server-core';
 
 // Check if username in field for query matches authenticated user's username

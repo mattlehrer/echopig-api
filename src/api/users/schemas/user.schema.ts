@@ -1,16 +1,18 @@
 import { Schema, model, Model, Document, Query } from 'mongoose';
+import * as mongooseAlgolia from 'mongoose-algolia';
+import { normalizeEmail, isEmail as validateEmail } from 'validator';
 import * as bcrypt from 'bcrypt';
-import { User } from '../../../graphql.classes';
+import { User, SocialToken } from 'src/graphql.classes';
+import { ConfigService } from 'src/config/config.service';
+
+const configService = new ConfigService(`${process.env.NODE_ENV}.env`);
 
 export interface UserDocument extends User, Document {
   // Declaring everything that is not in the GraphQL Schema for a User
   password: string;
-  lowercaseUsername: string;
-  lowercaseEmail: string;
-  passwordReset?: {
-    token: string;
-    expiration: Date;
-  };
+  normalizedUsername: string;
+  normalizedEmail: string;
+  tokens?: SocialToken[];
 
   /**
    * Checks if the user's password provided matches the user's password hash
@@ -33,15 +35,10 @@ export interface IUserModel extends Model<UserDocument> {
   validateEmail(email: string): boolean;
 }
 
-export const PasswordResetSchema: Schema = new Schema({
-  token: { type: String, required: true },
-  expiration: { type: Date, required: true },
-});
-
-function validateEmail(email: string): boolean {
-  const expression = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-  return expression.test(email);
-}
+// function validateEmail(email: string): boolean {
+//   const expression = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+//   return expression.test(email);
+// }
 
 export const UserSchema: Schema = new Schema(
   {
@@ -51,10 +48,7 @@ export const UserSchema: Schema = new Schema(
       required: true,
       validate: { validator: validateEmail },
     },
-    password: {
-      type: String,
-      required: true,
-    },
+    password: String,
     username: {
       type: String,
       unique: true,
@@ -64,15 +58,17 @@ export const UserSchema: Schema = new Schema(
       type: [String],
       required: true,
     },
-    lowercaseUsername: {
+    normalizedUsername: {
       type: String,
       unique: true,
     },
-    lowercaseEmail: {
+    normalizedEmail: {
       type: String,
       unique: true,
     },
-    passwordReset: PasswordResetSchema,
+    isVerified: { type: Boolean, default: false },
+    // passwordReset: PasswordResetTokenSchema,
+    // signUp: SignupTokenSchema,
     enabled: {
       type: Boolean,
       default: true,
@@ -81,6 +77,16 @@ export const UserSchema: Schema = new Schema(
       type: Date,
       default: Date.now,
     },
+
+    name: String,
+    postTag: { type: String, unique: true },
+    saveTag: { type: String, unique: true },
+    avatar: String,
+    explicit: { type: Boolean, default: false },
+
+    facebook: String,
+    twitter: String,
+    tokens: Array,
   },
   {
     timestamps: true,
@@ -92,8 +98,8 @@ UserSchema.pre<UserDocument>('save', function(next) {
   // eslint-disable-next-line @typescript-eslint/no-this-alias
   const user = this;
 
-  user.lowercaseUsername = user.username.toLowerCase();
-  user.lowercaseEmail = user.email.toLowerCase();
+  user.normalizedUsername = user.username.toLowerCase();
+  user.normalizedEmail = normalizeEmail(user.email) as string;
 
   // Make sure not to rehash the password if it is already hashed
   if (!user.isModified('password')) {
@@ -122,14 +128,14 @@ UserSchema.pre<Query<UserDocument>>('findOneAndUpdate', function(next) {
   if (updateFields.username) {
     this.update(
       {},
-      { $set: { lowercaseUsername: updateFields.username.toLowerCase() } },
+      { $set: { normalizedUsername: updateFields.username.toLowerCase() } },
     );
   }
 
   if (updateFields.email) {
     this.update(
       {},
-      { $set: { lowercaseEmail: updateFields.email.toLowerCase() } },
+      { $set: { normalizedEmail: normalizeEmail(updateFields.email) } },
     );
   }
 
@@ -174,6 +180,34 @@ UserSchema.methods.checkPassword = function(
 UserSchema.statics.validateEmail = function(email: string): boolean {
   return validateEmail(email);
 };
+
+UserSchema.plugin(mongooseAlgolia, {
+  appId: configService.algoliaAppId,
+  apiKey: configService.algoliaApiKey,
+  indexName: `${configService.env}_USER`, //The name of the index in Algolia, you can also pass in a function
+  selector: 'username name', //You can decide which field that are getting synced to Algolia (same as selector in mongoose)
+  // populate: {
+  //   path: 'podcast',
+  //   select: 'title -_id',
+  // },
+  // defaults: {
+  //   author: 'unknown',
+  // },
+  // mappings: {
+  //   title: function(value) {
+  //     return `Book: ${value}`;
+  //   },
+  // },
+  // virtuals: {
+  //   whatever: function(doc) {
+  //     return `Custom data ${doc.title}`;
+  //   },
+  // },
+  filter: function(doc: UserDocument) {
+    return doc.enabled;
+  },
+  debug: configService.env === 'development', // Default: false -> If true operations are logged out in your console
+});
 
 export const UserModel: IUserModel = model<UserDocument, IUserModel>(
   'User',

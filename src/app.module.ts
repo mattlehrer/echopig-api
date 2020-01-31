@@ -5,6 +5,13 @@ import { MongooseModule, MongooseModuleOptions } from '@nestjs/mongoose';
 import { join } from 'path';
 import { ConfigModule } from './config/config.module';
 import { ConfigService } from './config/config.service';
+import { NestEmitterModule } from 'nest-emitter';
+import { EventEmitter } from 'events';
+// import { AppService } from './app.service';
+// import { AppController } from './app.controller';
+import { UtilsModule } from './utils/utils.module';
+import { EmailModule } from './utils/email/email.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -16,6 +23,7 @@ import { ConfigService } from './config/config.service';
           useNewUrlParser: true,
           useCreateIndex: true,
           useUnifiedTopology: true,
+          useFindAndModify: false,
         };
 
         if (configService.mongoAuthEnabled) {
@@ -38,6 +46,12 @@ import { ConfigService } from './config/config.service';
     }),
     ConfigModule,
     ApiModule,
+    NestEmitterModule.forRoot(new EventEmitter()),
+    UtilsModule,
+    EmailModule,
+    AnalyticsModule,
   ],
+  // controllers: [AppController],
+  // providers: [AppService],
 })
 export class AppModule {}

@@ -10,6 +10,7 @@ export interface EnvConfig {
 @Injectable()
 export class ConfigService {
   private readonly envConfig: EnvConfig;
+  private readonly environment: string;
 
   constructor(filePath: string) {
     let file: Buffer | undefined;
@@ -21,10 +22,12 @@ export class ConfigService {
 
     const config = dotenv.parse(file);
     this.envConfig = this.validateInput(config);
+    this.environment = process.env.NODE_ENV || 'development';
   }
 
   private validateInput(envConfig: EnvConfig): EnvConfig {
     const envVarsSchema: Joi.ObjectSchema = Joi.object({
+      BASE_URL: Joi.string().required(),
       MONGO_URI: Joi.string().required(),
       MONGO_AUTH_ENABLED: Joi.boolean().default(false),
       MONGO_USER: Joi.string().when('MONGO_AUTH_ENABLED', {
@@ -56,6 +59,22 @@ export class ConfigService {
         then: Joi.required(),
       }),
       TEST_EMAIL_TO: Joi.string(),
+      AWS_ACCESS_KEY_ID: Joi.string(),
+      AWS_SECRET_ACCESS_KEY: Joi.string(),
+      AWS_S3_BUCKET: Joi.string(),
+      MAILGUN_API_KEY: Joi.string(),
+      MAILGUN_DOMAIN: Joi.string(),
+      TWITTER_CONSUMER_KEY: Joi.string(),
+      TWITTER_CONSUMER_SECRET: Joi.string(),
+      FACEBOOK_APP_ID: Joi.string(),
+      FACEBOOK_APP_SECRET: Joi.string(),
+      FACEBOOK_APP_TOKEN: Joi.string(),
+      SEGMENT_KEY: Joi.string(),
+      STREAM_KEY: Joi.string(),
+      STREAM_SECRET: Joi.string(),
+      STREAM_APP_ID: Joi.string(),
+      ALGOLIA_APP_ID: Joi.string(),
+      ALGOLIA_API_KEY: Joi.string(),
     });
 
     const { error, value: validatedEnvConfig } = Joi.validate(
@@ -68,6 +87,10 @@ export class ConfigService {
       );
     }
     return validatedEnvConfig;
+  }
+
+  get env(): string {
+    return this.environment;
   }
 
   get jwtExpiresIn(): number | undefined {
@@ -91,6 +114,18 @@ export class ConfigService {
 
   get emailService(): string | undefined {
     return this.envConfig.EMAIL_SERVICE;
+  }
+
+  get mgApiKey(): string | undefined {
+    return this.envConfig.MAILGUN_API_KEY;
+  }
+
+  get mgDomain(): string | undefined {
+    return this.envConfig.MAILGUN_DOMAIN;
+  }
+
+  get baseUrl(): string | undefined {
+    return this.envConfig.BASE_URL;
   }
 
   get emailUsername(): string | undefined {
@@ -123,5 +158,61 @@ export class ConfigService {
 
   get mongoAuthEnabled(): boolean {
     return Boolean(this.envConfig.MONGO_AUTH_ENABLED).valueOf();
+  }
+
+  get awsAccessKeyId(): string | undefined {
+    return this.envConfig.AWS_ACCESS_KEY_ID;
+  }
+
+  get awsSecretAccessKey(): string | undefined {
+    return this.envConfig.AWS_SECRET_ACCESS_KEY;
+  }
+
+  get s3Bucket(): string | undefined {
+    return this.envConfig.AWS_S3_BUCKET;
+  }
+
+  get twitterConsumerKey(): string | undefined {
+    return this.envConfig.TWITTER_CONSUMER_KEY;
+  }
+
+  get twitterConsumerSecret(): string | undefined {
+    return this.envConfig.TWITTER_CONSUMER_SECRET;
+  }
+
+  get fbAppId(): string | undefined {
+    return this.envConfig.FACEBOOK_APP_ID;
+  }
+
+  get fbAppSecret(): string | undefined {
+    return this.envConfig.FACEBOOK_APP_SECRET;
+  }
+
+  get fbAppToken(): string | undefined {
+    return this.envConfig.FACEBOOK_APP_TOKEN;
+  }
+
+  get segmentKey(): string | undefined {
+    return this.envConfig.SEGMENT_KEY;
+  }
+
+  get streamKey(): string | undefined {
+    return this.envConfig.STREAM_KEY;
+  }
+
+  get streamSecret(): string | undefined {
+    return this.envConfig.STREAM_SECRET;
+  }
+
+  get streamAppId(): string | undefined {
+    return this.envConfig.STREAM_APP_ID;
+  }
+
+  get algoliaAppId(): string | undefined {
+    return this.envConfig.ALGOLIA_APP_ID;
+  }
+
+  get algoliaApiKey(): string | undefined {
+    return this.envConfig.ALGOLIA_API_KEY;
   }
 }

@@ -1,0 +1,33 @@
+scalar Date
+scalar ObjectId
+
+type Query {
+  podcasts: [Podcast!]!
+  podcastById(podcastId: ObjectId!): Podcast
+  podcast(iTunesId: Int!): Podcast
+  genre(genre: String): [Podcast!]
+}
+
+type Podcast {
+  iTunesID: Int
+  author: String
+  title: String!
+  collectionViewUrl: String
+  feedUrl: String!
+  artworkUrl30: String
+  artworkUrl60: String
+  artworkUrl100: String
+  collectionExplicitness: String
+  trackExplicitness: String
+  country: String
+  primaryGenreName: String
+  contentAdvisoryRating: String
+  artworkUrl600: String
+  genreIds: [Int]
+  genres: [String]
+  listenNotesID: String
+  appURLs: [String]
+  _id: ObjectId!
+  posts: Int
+  episodes: [Episode]
+}

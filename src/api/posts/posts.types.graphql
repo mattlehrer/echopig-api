@@ -1,0 +1,43 @@
+scalar Date
+scalar ObjectId
+
+type Query {
+  posts(byUser: ObjectId!): [Post!]!
+  post(post: ObjectId!): Post!
+  mostPostedEpisodesInTimeframe(since: Date, maxEpisodes: Int): [Episode!]!
+  mostPostedEpisodesInGenreInTimeframe(
+    genre: String!
+    since: Date
+    maxEpisodes: Int
+  ): [Episode!]!
+  mostPostedPodcastsInTimeframe(since: Date, maxPodcasts: Int): [Podcast!]!
+}
+
+type Mutation {
+  createPost(createPostInput: CreatePostInput!): Post!
+  updatePost(postId: ObjectId!, fieldsToUpdate: UpdatePostInput!): Post!
+  deletePost(postId: ObjectId!): ObjectId!
+}
+
+type Post {
+  byUser: ObjectId!
+  shareURL: String!
+  comment: String
+  episode: ObjectId
+  createdAt: Date!
+  updatedAt: Date
+  enabled: Boolean!
+  _id: ObjectId!
+}
+
+input CreatePostInput {
+  byUser: ObjectId
+  shareURL: String!
+  enabled: Boolean
+  comment: String
+}
+
+input UpdatePostInput {
+  comment: String
+  enabled: Boolean
+}

@@ -1,0 +1,21 @@
+scalar Date
+scalar ObjectId
+
+type Query {
+  episodes(podcast: ObjectId): [Episode!]!
+  episode(episodeId: ObjectId): Episode!
+}
+
+type Episode {
+  podcast: ObjectId
+  title: String
+  description: String
+  image: String
+  mp3URL: String!
+  releaseDate: Date
+  duration: Int
+  shareURLs: [String]
+  parentalRating: String
+  _id: ObjectId!
+  posts: Int
+}
