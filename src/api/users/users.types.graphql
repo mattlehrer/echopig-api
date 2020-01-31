@@ -9,7 +9,9 @@ type Query {
 }
 
 type Mutation {
-  createUser(createUserInput: CreateUserInput): User!
+  createUser(createUserInput: CreateUserInput!): User!
+  createSocialUser(createSocialUserInput: CreateSocialUserInput!): LoginResult!
+  # createSocialUser(createSocialUserInput: CreateSocialUserInput!): User!
   resendConfirmEmail(email: String): User!
   confirmEmail(token: String): User!
   updateUser(fieldsToUpdate: UpdateUserInput!): User!
@@ -44,6 +46,16 @@ input CreateUserInput {
   username: String!
   email: String!
   password: String!
+}
+
+input CreateSocialUserInput {
+  username: String!
+  email: String
+  facebook: String
+  twitter: String
+  tokens: [SocialToken]!
+  name: String
+  avatar: String
 }
 
 input UpdateUserInput {

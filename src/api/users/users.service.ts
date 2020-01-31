@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/camelcase */
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
@@ -7,9 +8,11 @@ import { generate as generateId } from 'shortid';
 import { UserDocument, UserModel } from './schemas/user.schema';
 import {
   CreateUserInput,
+  CreateSocialUserInput,
   UpdateUserInput,
   UpdatePasswordInput,
   ObjectId,
+  LoginResult,
 } from 'src/graphql.classes';
 import { randomBytes } from 'crypto';
 import { ConfigService } from 'src/config/config.service';
@@ -17,9 +20,11 @@ import { MongoError } from 'mongodb';
 import { AuthService } from 'src/api/auth/auth.service';
 import { UserEventEmitter } from './users.events';
 import { EmailService } from 'src/utils/email/email.service';
-import { Token, SocialUserInput } from '../@types/declarations';
+import { Token } from '../@types/declarations';
 import { PostsService } from '../posts/posts.service';
 import { ModuleRef } from '@nestjs/core';
+import { getFbProfile } from '../../utils/facebook.login';
+import { getTwitterProfile } from '../../utils/twitter.login';
 
 @Injectable()
 export class UsersService implements OnModuleInit {
@@ -245,7 +250,7 @@ export class UsersService implements OnModuleInit {
    * @memberof UsersService
    */
   async create(
-    createUserInput: CreateUserInput | SocialUserInput,
+    createUserInput: CreateUserInput | CreateSocialUserInput,
   ): Promise<UserDocument> {
     const createdUser = new this.userModel({
       ...createUserInput,
@@ -267,6 +272,45 @@ export class UsersService implements OnModuleInit {
     this.emitter.emit('newUser', user);
 
     return user;
+  }
+
+  async createSocial(
+    createSocialUserInput: CreateSocialUserInput,
+  ): Promise<UserDocument> {
+    const { username, tokens } = createSocialUserInput;
+    if (createSocialUserInput.facebook) {
+      if (!(await this.authService.isValidFbToken(tokens[0].accessToken))) {
+        Logger.debug('Invalid token', 'createSocial');
+        return undefined;
+      }
+
+      return await this.findOrCreateOneByFbId({
+        id: createSocialUserInput.facebook,
+        token: tokens[0].accessToken,
+        username,
+      });
+    } else {
+      return await this.findOrCreateOneByTwitterId({
+        tokens,
+        username,
+      });
+    }
+    return undefined;
+  }
+
+  async createSocialUserAndLogin(
+    createSocialUserInput: CreateSocialUserInput,
+  ): Promise<LoginResult | undefined> {
+    const user = await this.createSocial(createSocialUserInput);
+    if (!user) return undefined;
+    const token = this.authService.createJwt(user).token;
+    const result: LoginResult = {
+      user,
+      token,
+    };
+    user.lastSeenAt = new Date();
+    user.save();
+    return result;
   }
 
   async resendConfirmEmail({
@@ -302,6 +346,7 @@ export class UsersService implements OnModuleInit {
   }
 
   async verifyEmail(code: string): Promise<UserDocument | undefined> {
+    Logger.debug(code, 'verifyEmail');
     const token = await this.signUpTokenModel.findOne({ token: code }).exec();
     if (!token) throw new Error('Token expired');
     const user = await this.findOneById(token.user);
@@ -309,7 +354,7 @@ export class UsersService implements OnModuleInit {
     if (user.isVerified) return user;
     user.isVerified = true;
     await user.save();
-    await this.signUpTokenModel.remove({ token: code });
+    await this.signUpTokenModel.deleteOne({ token: code });
     return user;
   }
 
@@ -344,12 +389,123 @@ export class UsersService implements OnModuleInit {
     return undefined;
   }
 
-  async findOneByFbId(id: string): Promise<UserDocument | undefined> {
+  async findOrCreateOneByTwitterId({
+    tokens,
+    username,
+  }): Promise<UserDocument | undefined> {
+    Logger.debug('checking twitter profile', 'findOrCreateOneByTwitterId');
+    Logger.debug(tokens, 'findOrCreateOneByTwitterId');
+    const oauth = {
+      consumer_key: this.configService.twitterConsumerKey,
+      consumer_secret: this.configService.twitterConsumerSecret,
+      token: tokens[0].accessToken,
+      token_secret: tokens[0].tokenSecret,
+    };
+    const profile = await getTwitterProfile(oauth);
+    const user = await this.findOneByTwitterId(profile.id);
+    if (user) return user;
+
+    // Logger.debug(profile, 'findOrCreateOneByTwitterId');
+    let existingUser: UserDocument;
+    if (profile.email) {
+      try {
+        existingUser = await this.findOneByEmail(profile.email);
+      } catch (err) {
+        throw err;
+      }
+    }
+
+    if (existingUser) {
+      existingUser.set({
+        twitter: profile.id,
+        name: existingUser.name ? existingUser.name : profile.name,
+        avatar: existingUser.avatar ? existingUser.avatar : profile.avatar,
+      });
+      existingUser.tokens.push({
+        kind: 'twitter',
+        accessToken: tokens.oauthToken,
+        tokenSecret: tokens.oauthTokenSecret,
+      });
+      try {
+        await existingUser.save();
+        return existingUser;
+      } catch (err) {
+        throw err;
+      }
+    }
+
+    const newUser: CreateSocialUserInput = {
+      username,
+      email: profile.email,
+      twitter: profile.id,
+      tokens: [
+        {
+          kind: 'twitter',
+          accessToken: tokens.oauthToken,
+          tokenSecret: tokens.oauthTokenSecret,
+        },
+      ],
+      name: profile.name,
+      avatar: profile.avatar,
+    };
+
+    return await this.create(newUser);
+  }
+
+  async findOneByFbId(facebook): Promise<UserDocument | undefined> {
     const user = await this.userModel
-      .findOne({ facebook: id, enabled: true })
+      .findOne({ facebook, enabled: true })
       .exec();
     if (user) return user;
     return undefined;
+  }
+
+  async findOrCreateOneByFbId({
+    id,
+    token,
+    username,
+  }): Promise<UserDocument | undefined> {
+    const user = await this.findOneByFbId(id);
+    if (user) return user;
+
+    // grab user info from graph api
+    Logger.debug('checking fb profile', 'findOrCreateOneByFbId');
+    const profile = await getFbProfile(id, token);
+    Logger.debug(profile, 'findOrCreateOneByFbId');
+    let existingUser: UserDocument;
+    if (profile.email) {
+      try {
+        existingUser = await this.findOneByEmail(profile.email);
+      } catch (err) {
+        throw err;
+      }
+    }
+
+    if (existingUser) {
+      existingUser.set({
+        facebook: id,
+        name: existingUser.name ? existingUser.name : profile.name,
+        avatar: existingUser.avatar ? existingUser.avatar : profile.avatar,
+      });
+      existingUser.tokens.push({ kind: 'facebook', accessToken: token });
+      try {
+        await existingUser.save();
+        return existingUser;
+      } catch (err) {
+        throw err;
+      }
+    }
+
+    const newUser: CreateSocialUserInput = {
+      username,
+      email: profile.email,
+      facebook: id,
+      tokens: [{ kind: 'facebook', accessToken: token }],
+      name: profile.name,
+      avatar: profile.avatar,
+    };
+
+    return await this.create(newUser);
   }
 
   /**
@@ -424,7 +580,7 @@ export class UsersService implements OnModuleInit {
    */
   private evaluateMongoError(
     error: MongoError,
-    createUserInput: CreateUserInput | SocialUserInput,
+    createUserInput: CreateUserInput | CreateSocialUserInput,
   ): Error {
     if (error.code === 11000) {
       if (

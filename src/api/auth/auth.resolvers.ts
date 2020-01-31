@@ -1,5 +1,10 @@
 import { Resolver, Args, Query, Context, Mutation } from '@nestjs/graphql';
-import { LoginUserInput, LoginResult } from 'src/graphql.classes';
+import {
+  LoginUserInput,
+  LoginResult,
+  FbLoginInput,
+  TwitterTokens,
+} from 'src/graphql.classes';
 import { AuthService } from './auth.service';
 import { AuthenticationError } from 'apollo-server-core';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -18,6 +23,28 @@ export class AuthResolver {
     throw new AuthenticationError(
       'Could not log-in with the provided credentials',
     );
+  }
+
+  @Mutation('fbLogin')
+  async fbLogin(
+    @Args('fbIdAndToken') fbIdAndToken: FbLoginInput,
+  ): Promise<LoginResult> {
+    const result = await this.authService.validateUserByFbAccessToken(
+      fbIdAndToken.id,
+      fbIdAndToken.accessToken,
+    );
+    return result;
+  }
+
+  @Mutation('twitterLogin')
+  async twitterLogin(
+    @Args('twitterTokens') twitterTokens: TwitterTokens,
+  ): Promise<LoginResult> {
+    const result = await this.authService.validateUserByTwitterTokens(
+      twitterTokens.oauthToken,
+      twitterTokens.oauthTokenSecret,
+    );
+    return result;
   }
 
   // There is no username guard here because if the person has the token, they can be any user

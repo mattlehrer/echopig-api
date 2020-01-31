@@ -68,6 +68,7 @@ export class ConfigService {
       TWITTER_CONSUMER_SECRET: Joi.string(),
       FACEBOOK_APP_ID: Joi.string(),
       FACEBOOK_APP_SECRET: Joi.string(),
+      FACEBOOK_APP_TOKEN: Joi.string(),
       SEGMENT_KEY: Joi.string(),
       STREAM_KEY: Joi.string(),
       STREAM_SECRET: Joi.string(),
@@ -185,6 +186,10 @@ export class ConfigService {
 
   get fbAppSecret(): string | undefined {
     return this.envConfig.FACEBOOK_APP_SECRET;
+  }
+
+  get fbAppToken(): string | undefined {
+    return this.envConfig.FACEBOOK_APP_TOKEN;
   }
 
   get segmentKey(): string | undefined {

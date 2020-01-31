@@ -48,10 +48,7 @@ export const UserSchema: Schema = new Schema(
       required: true,
       validate: { validator: validateEmail },
     },
-    password: {
-      type: String,
-      required: true,
-    },
+    password: String,
     username: {
       type: String,
       unique: true,

@@ -4,10 +4,12 @@ import { UsersService } from './users.service';
 import { JwtAuthGuard } from 'src/api/auth/guards/jwt-auth.guard';
 import {
   CreateUserInput,
+  CreateSocialUserInput,
   User,
   UpdateUserInput,
   UpdatePasswordInput,
   ObjectId,
+  LoginResult,
 } from 'src/graphql.classes';
 import { UsernameEmailAdminGuard } from 'src/api/auth/guards/username-email-admin.guard';
 import { AdminGuard } from 'src/api/auth/guards/admin.guard';
@@ -88,7 +90,8 @@ export class UserResolver {
 
   @Mutation('createUser')
   async createUser(
-    @Args('createUserInput') createUserInput: CreateUserInput,
+    @Args('createUserInput')
+    createUserInput: CreateUserInput,
   ): Promise<User> {
     let createdUser: User | undefined;
     try {
@@ -97,6 +100,22 @@ export class UserResolver {
       throw new UserInputError(error.message);
     }
     return createdUser;
+  }
+
+  @Mutation('createSocialUser')
+  async createSocialUser(
+    @Args('createSocialUserInput')
+    createSocialUserInput: CreateSocialUserInput,
+  ): Promise<LoginResult> {
+    let result: LoginResult | undefined;
+    try {
+      result = await this.usersService.createSocialUserAndLogin(
+        createSocialUserInput,
+      );
+    } catch (error) {
+      throw new UserInputError(error.message);
+    }
+    return result;
   }
 
   @Mutation('resendConfirmEmail')

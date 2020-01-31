@@ -8,8 +8,6 @@ import { AuthResolver } from './auth.resolvers';
 import { ConfigService } from 'src/config/config.service';
 import { ConfigModule } from 'src/config/config.module';
 import { LocalStrategy } from './strategies/local.strategy';
-import { TwitterStrategy } from './strategies/twitter.strategy';
-import { FacebookStrategy } from './strategies/facebook.strategy';
 
 @Module({
   imports: [
@@ -33,14 +31,7 @@ import { FacebookStrategy } from './strategies/facebook.strategy';
     ConfigModule,
   ],
   controllers: [],
-  providers: [
-    AuthService,
-    AuthResolver,
-    JwtStrategy,
-    LocalStrategy,
-    TwitterStrategy,
-    FacebookStrategy,
-  ],
+  providers: [AuthService, AuthResolver, JwtStrategy, LocalStrategy],
   exports: [AuthService],
 })
 export class AuthModule {}

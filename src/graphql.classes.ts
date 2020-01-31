@@ -11,10 +11,25 @@ export class CreatePostInput {
   comment?: string;
 }
 
+export class CreateSocialUserInput {
+  username: string;
+  email?: string;
+  facebook?: string;
+  twitter?: string;
+  tokens: SocialToken[];
+  name?: string;
+  avatar?: string;
+}
+
 export class CreateUserInput {
   username: string;
   email: string;
   password: string;
+}
+
+export class FbLoginInput {
+  id: string;
+  accessToken: string;
 }
 
 export class LoginUserInput {
@@ -28,6 +43,11 @@ export class SocialToken {
   accessToken?: string;
   tokenSecret?: string;
   refreshToken?: string;
+}
+
+export class TwitterTokens {
+  oauthToken: string;
+  oauthTokenSecret: string;
 }
 
 export class UpdatePasswordInput {
@@ -79,6 +99,14 @@ export class LoginResult {
 export abstract class IMutation {
   abstract login(user: LoginUserInput): LoginResult | Promise<LoginResult>;
 
+  abstract fbLogin(
+    fbIdAndToken: FbLoginInput,
+  ): LoginResult | Promise<LoginResult>;
+
+  abstract twitterLogin(
+    twitterTokens: TwitterTokens,
+  ): LoginResult | Promise<LoginResult>;
+
   abstract createFollow(target: ObjectId): Follow | Promise<Follow>;
 
   abstract createPost(createPostInput: CreatePostInput): Post | Promise<Post>;
@@ -90,7 +118,11 @@ export abstract class IMutation {
 
   abstract deletePost(postId: ObjectId): ObjectId | Promise<ObjectId>;
 
-  abstract createUser(createUserInput?: CreateUserInput): User | Promise<User>;
+  abstract createUser(createUserInput: CreateUserInput): User | Promise<User>;
+
+  abstract createSocialUser(
+    createSocialUserInput: CreateSocialUserInput,
+  ): LoginResult | Promise<LoginResult>;
 
   abstract resendConfirmEmail(email?: string): User | Promise<User>;
 
