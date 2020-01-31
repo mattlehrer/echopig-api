@@ -1,5 +1,4 @@
-import dotenv from 'dotenv';
-dontenv.config();
+require('dotenv').config();
 
 exports.config = {
   /**
